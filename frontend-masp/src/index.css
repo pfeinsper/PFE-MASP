@@ -1,89 +1,61 @@
-/* 
-    Estilos globais inspirados no site do MASP.
-    Utilizamos uma paleta de cores preto, branco e vermelho.
-*/
-
-/* Importando fonte moderna e profissional */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
-
-/* Reset básico para remover margens e espaçamentos padrões */
-* {
+/* Definição da fonte padrão */
+body {
+  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  font-family: 'Montserrat', sans-serif; /* Definindo a fonte global */
+  background-color: #f4f4f4;
 }
 
-/* Definição das cores base para manter um padrão */
-:root {
-  --primary-color: #000000; /* Preto predominante */
-  --secondary-color: #e10600; /* Vermelho característico do MASP */
-  --background-color: #ffffff; /* Fundo branco */
-  --text-color: #000000; /* Cor padrão para textos */
-  --gray-color: #f4f4f4; /* Cinza claro para destacar elementos */
-}
-
-/* Estilização global do corpo do site */
-body {
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
-/* Container centralizado para manter os elementos organizados */
+/* Container para centralizar o conteúdo */
 .container {
-  width: 90%;
-  max-width: 800px;
-  margin: 40px auto;
+  max-width: 600px;
+  margin: 120px auto; /* Ajustado para não cobrir o navbar */
   padding: 20px;
+  background: white;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  text-align: center;
 }
 
-/* Estilização dos títulos principais */
+/* Títulos */
 h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--primary-color);
-  text-align: center;
+  color: #d50000;
+  font-size: 24px;
   margin-bottom: 20px;
 }
 
-/* Campos de entrada personalizados */
+/* Campos de entrada */
 input {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
-  border: 1px solid var(--primary-color);
+  border: 1px solid #ccc;
   border-radius: 5px;
-  font-size: 16px;
 }
 
-/* Botão estilizado para seguir o padrão visual do MASP */
+/* Botões */
 button {
-  background-color: var(--secondary-color);
+  background-color: #d50000;
   color: white;
   border: none;
   padding: 10px;
-  font-size: 16px;
-  font-weight: 600;
+  width: 100%;
   border-radius: 5px;
   cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
+  font-size: 16px;
 }
 
 button:hover {
-  background-color: #bf0404;
+  background-color: #b00000;
 }
 
-/* Lista de obras estilizada */
+/* Lista de resultados */
 ul {
   list-style: none;
   padding: 0;
 }
 
 ul li {
-  background: var(--gray-color);
-  margin: 5px 0;
   padding: 10px;
-  border-radius: 5px;
-  font-size: 18px;
+  border-bottom: 1px solid #ddd;
 }
