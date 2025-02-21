@@ -2,29 +2,29 @@
 
 📂 frontend-masp
 
- - ┣ 📂 src
+┣ 📂 src
  
- - ┃ ┣ 📂 pages  <-- (Contém as telas do app)
+┃ ┣ 📂 pages  <-- (Contém as telas do app)
  
- - ┃ ┃ ┣ 📜 Login.jsx  <-- Tela de login
+┃ ┃ ┣ 📜 Login.jsx  <-- Tela de login
  
- - ┃ ┃ ┣ 📜 Search.jsx  <-- Tela de pesquisa de obras
+┃ ┃ ┣ 📜 Search.jsx  <-- Tela de pesquisa de obras
  
- - ┃ ┃ ┣ 📜 Movimentacao.jsx  <-- Tela de movimentação de obras
+┃ ┃ ┣ 📜 Movimentacao.jsx  <-- Tela de movimentação de obras
  
- - ┃ ┣ 📂 components  <-- (Componentes reutilizáveis)
+┃ ┣ 📂 components  <-- (Componentes reutilizáveis)
  
- - ┃ ┣ 📂 assets  <-- (Imagens e arquivos estáticos)
+┃ ┣ 📂 assets  <-- (Imagens e arquivos estáticos)
  
- - ┃ ┣ 📂 hooks  <-- (Funções customizadas, se necessário)
+┃ ┣ 📂 hooks  <-- (Funções customizadas, se necessário)
  
- - ┃ ┣ 📜 main.jsx  <-- Arquivo principal que configura as rotas
+┃ ┣ 📜 main.jsx  <-- Arquivo principal que configura as rotas
  
- - ┃ ┣ 📜 index.css  <-- Estilização global do projeto
+┃ ┣ 📜 index.css  <-- Estilização global do projeto
  
- - ┣ 📜 package.json  <-- Dependências e scripts do projeto
+┣ 📜 package.json  <-- Dependências e scripts do projeto
  
- - ┣ 📜 vite.config.js  
+┣ 📜 vite.config.js  
 
 1. Após clonar o repositório é necessário entrar na pasta do projeto: *cd frontend-masp*
 2. Depois de entrar na pasta é necessário instalar as dependências: *npm install*
