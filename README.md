@@ -1,17 +1,29 @@
 # PFE-MASP
 
 📂 frontend-masp
+
  ┣ 📂 src
+ 
  ┃ ┣ 📂 pages  <-- (Contém as telas do app)
+ 
  ┃ ┃ ┣ 📜 Login.jsx  <-- Tela de login
+ 
  ┃ ┃ ┣ 📜 Search.jsx  <-- Tela de pesquisa de obras
+ 
  ┃ ┃ ┣ 📜 Movimentacao.jsx  <-- Tela de movimentação de obras
+ 
  ┃ ┣ 📂 components  <-- (Componentes reutilizáveis)
+ 
  ┃ ┣ 📂 assets  <-- (Imagens e arquivos estáticos)
+ 
  ┃ ┣ 📂 hooks  <-- (Funções customizadas, se necessário)
+ 
  ┃ ┣ 📜 main.jsx  <-- Arquivo principal que configura as rotas
+ 
  ┃ ┣ 📜 index.css  <-- Estilização global do projeto
+ 
  ┣ 📜 package.json  <-- Dependências e scripts do projeto
+ 
  ┣ 📜 vite.config.js  
 
 1. Após clonar o repositório é necessário entrar na pasta do projeto: *cd frontend-masp*
