@@ -51,17 +51,16 @@ button:hover {
   background-color: #b00000;
 }
 
-/* Lista de sugestões (autocomplete) */
+/* Ajusta a posição da lista para ficar logo abaixo do input */
 .autocomplete-container {
   position: relative;
   width: 100%;
 }
 
-/* Lista suspensa de sugestões */
 .autocomplete-list {
-  display: none; /* Inicialmente oculta */
+  display: none;
   position: absolute;
-  top: 100%; /* Fica logo abaixo do input */
+  top: 100%; /* Garante que a lista fique exatamente abaixo do input */
   left: 0;
   width: 100%;
   background: white;
@@ -70,26 +69,30 @@ button:hover {
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   max-height: 200px;
   overflow-y: auto;
-  z-index: 1000; /* Para garantir que fique acima de outros elementos */
+  z-index: 1000;
+  padding: 0; /* Remove espaços extras */
+  margin-top: 2px; /* Pequeno ajuste para evitar sobreposição */
 }
 
-/* Garante que a lista seja exibida quando houver sugestões */
+/* Garante que a lista seja visível apenas quando necessário */
 .autocomplete-list.mostrar {
   display: block !important;
 }
 
-/* Itens da lista de sugestões */
+/* Ajusta o espaçamento dos itens na lista */
 .autocomplete-list li {
   padding: 10px;
   cursor: pointer;
   transition: background 0.2s;
   font-size: 16px;
   text-align: left;
+  list-style: none; /* Remove o marcador de lista */
 }
 
 .autocomplete-list li:hover {
   background: #f0f0f0;
 }
+
 
 /* Melhorar a aparência da mensagem de erro */
 .mensagem {

@@ -68,16 +68,16 @@ export default function Movimentacao() {
 
     // Selecionar uma obra ao clicar
     const handleSelecionarObra = (obra) => {
-        setObraSelecionada(obra.titulo);
-        setObraId(obra.id);
-        setFiltrandoObras([]);
+      setObraSelecionada(obra.titulo);
+      setObraId(obra.id);
+      setFiltrandoObras([]); // Limpa a lista após a seleção
     };
-
-    // Selecionar um local ao clicar
+  
+    // Selecionar um local ao clicar e fechar a lista
     const handleSelecionarLocal = (local) => {
         setLocalSelecionado(local.nome);
         setLocalId(local.id);
-        setFiltrandoLocais([]);
+        setFiltrandoLocais([]); // Limpa a lista após a seleção
     };
 
     // Função para registrar a movimentação
