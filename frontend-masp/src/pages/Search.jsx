@@ -1,51 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../index.css"; // Importando os estilos globais
-
-// Dados de exemplo para simular a pesquisa (substituir pela API real no futuro)
-const mockObras = [
-  { id: "1", title: "Obra Teste 1", inventory_number: "001" },
-  { id: "2", title: "Obra Teste 2", inventory_number: "002" },
-  { id: "3", title: "Obra Teste 3", inventory_number: "003" },
-];
+import api from "../services/api";
+import "../index.css";
 
 export default function Search() {
-  const [termo, setTermo] = useState("");
-  const [obras, setObras] = useState([]);
-  const navigate = useNavigate(); // Hook para navegação
+    const [termo, setTermo] = useState("");
+    const [obras, setObras] = useState([]);
+    const [sugestoes, setSugestoes] = useState([]);
+    const navigate = useNavigate();
 
-  const buscarObras = () => {
-    // Simula uma pesquisa local baseada no termo digitado
-    const resultados = mockObras.filter((obra) =>
-      obra.title.toLowerCase().includes(termo.toLowerCase())
+    useEffect(() => {
+        if (termo.length > 0) {
+            api.get(`/obras?search=${termo}`)
+                .then((res) => setSugestoes(res.data))
+                .catch((err) => console.error("Erro ao buscar sugestões:", err));
+        } else {
+            setSugestoes([]);
+        }
+    }, [termo]);
+
+    const buscarObras = () => {
+        api.get(`/obras?search=${termo}`)
+            .then((res) => setObras(res.data))
+            .catch((err) => console.error("Erro ao buscar obras:", err));
+    };
+
+    return (
+        <div className="container">
+            <h1>Pesquisar Obras</h1>
+
+            {/* Container para input e autocomplete */}
+            <div className="autocomplete-container">
+                <input
+                    type="text"
+                    placeholder="Digite o nome ou ID da obra"
+                    value={termo}
+                    onChange={(e) => setTermo(e.target.value)}
+                />
+
+                {/* Lista de sugestões (não ocupa espaço extra na página) */}
+                {sugestoes.length > 0 && (
+                    <ul className="autocomplete-list">
+                        {sugestoes.map((obra) => (
+                            <li key={obra.id} onClick={() => setTermo(obra.titulo)}>
+                                {obra.titulo}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            {/* Botões e resultados abaixo da lista, sem serem empurrados */}
+            <div className="content">
+                <button onClick={buscarObras}>Buscar</button>
+
+                <ul>
+                    {obras.map((obra) => (
+                        <li key={obra.id}>{obra.titulo}</li>
+                    ))}
+                </ul>
+
+                <button onClick={() => navigate("/movimentacao")}>
+                    Ir para Movimentação
+                </button>
+            </div>
+        </div>
     );
-    setObras(resultados);
-  };
-
-  return (
-    <div className="container">
-      <h1>Pesquisar Obras</h1>
-      
-      {/* Campo de entrada para pesquisa */}
-      <input
-        type="text"
-        placeholder="Digite o nome da obra"
-        value={termo}
-        onChange={(e) => setTermo(e.target.value)}
-      />
-      
-      {/* Botão de busca */}
-      <button onClick={buscarObras}>Buscar</button>
-      
-      {/* Lista de resultados */}
-      <ul>
-        {obras.map((obra) => (
-          <li key={obra.id}>{obra.title} - {obra.inventory_number}</li>
-        ))}
-      </ul>
-
-      {/* Botão para ir para a página de movimentação */}
-      <button onClick={() => navigate("/movimentacao")}>Ir para Movimentação</button>
-    </div>
-  );
 }

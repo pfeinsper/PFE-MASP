@@ -9,7 +9,7 @@ body {
 /* Container para centralizar o conteúdo */
 .container {
   max-width: 600px;
-  margin: 120px auto; /* Ajustado para não cobrir o navbar */
+  margin: 120px auto;
   padding: 20px;
   background: white;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -31,6 +31,7 @@ input {
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 16px;
 }
 
 /* Botões */
@@ -43,19 +44,56 @@ button {
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  margin-top: 20px;
 }
 
 button:hover {
   background-color: #b00000;
 }
 
-/* Lista de resultados */
-ul {
-  list-style: none;
-  padding: 0;
+/* Lista de sugestões (autocomplete) */
+.autocomplete-container {
+  position: relative;
+  width: 100%;
 }
 
-ul li {
+/* Lista suspensa de sugestões */
+.autocomplete-list {
+  display: none; /* Inicialmente oculta */
+  position: absolute;
+  top: 100%; /* Fica logo abaixo do input */
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000; /* Para garantir que fique acima de outros elementos */
+}
+
+/* Garante que a lista seja exibida quando houver sugestões */
+.autocomplete-list.mostrar {
+  display: block !important;
+}
+
+/* Itens da lista de sugestões */
+.autocomplete-list li {
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 16px;
+  text-align: left;
+}
+
+.autocomplete-list li:hover {
+  background: #f0f0f0;
+}
+
+/* Melhorar a aparência da mensagem de erro */
+.mensagem {
+  color: green;
+  font-size: 16px;
+  margin-top: 10px;
 }
