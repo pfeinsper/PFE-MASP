@@ -66,39 +66,46 @@ export default function Movimentacao() {
     };
   
 
-    // Selecionar uma obra ao clicar
+    // Selecionar uma obra ao clicar e fechar a lista
+    // Selecionar uma obra ao clicar e fechar a lista
     const handleSelecionarObra = (obra) => {
       setObraSelecionada(obra.titulo);
       setObraId(obra.id);
       setFiltrandoObras([]); // Limpa a lista após a seleção
+      document.getElementById("obraInput").blur(); // Remove o foco do input
     };
-  
+
     // Selecionar um local ao clicar e fechar a lista
     const handleSelecionarLocal = (local) => {
-        setLocalSelecionado(local.nome);
-        setLocalId(local.id);
-        setFiltrandoLocais([]); // Limpa a lista após a seleção
+      setLocalSelecionado(local.nome);
+      setLocalId(local.id);
+      setFiltrandoLocais([]); // Limpa a lista após a seleção
+      document.getElementById("localInput").blur(); // Remove o foco do input
     };
+
 
     // Função para registrar a movimentação
     const handleRegistrar = async () => {
-        if (!obraId || !localId) {
-            setMensagem("Selecione uma obra e um local!");
-            return;
-        }
-
-        try {
-            await registrarMovimentacao(obraId, localId);
-            setMensagem("Movimentação registrada com sucesso!");
-            setObraSelecionada("");
-            setObraId(null);
-            setLocalSelecionado("");
-            setLocalId(null);
-        } catch (error) {
-            setMensagem("Erro ao registrar movimentação.");
-        }
-    };
-
+      if (!obraId || !localId) {
+          setMensagem("Selecione uma obra e um local!");
+          return;
+      }
+  
+      console.log("Enviando movimentação:", { obra_id: obraId, local_id: localId });
+  
+      try {
+          await registrarMovimentacao(obraId, localId);
+          setMensagem("Movimentação registrada com sucesso!");
+          setObraSelecionada("");
+          setObraId(null);
+          setLocalSelecionado("");
+          setLocalId(null);
+      } catch (error) {
+          console.error("Erro ao registrar movimentação:", error);
+          setMensagem("Erro ao registrar movimentação.");
+      }
+  };  
+  
     useEffect(() => {
       if (obraSelecionada.length > 0 && obras.length > 0) {
           const filtradas = obras.filter((obra) =>
@@ -128,42 +135,55 @@ export default function Movimentacao() {
   
           {/* Campo de busca para obras */}
           <div className="autocomplete-container">
-              <input
-                  type="text"
-                  placeholder="Digite o nome da obra"
-                  value={obraSelecionada}
-                  onChange={(e) => handleFiltrarObras(e.target.value)}
-              />
-              {filtrandoObras.length > 0 && (
-                  <ul className={`autocomplete-list ${filtrandoObras.length > 0 ? "mostrar" : ""}`}>
-                      {filtrandoObras.map((obra) => (
-                          <li key={obra.id} onClick={() => handleSelecionarObra(obra)}>
-                              {obra.titulo}
-                          </li>
-                      ))}
-                  </ul>
-              )}
+            <input
+                id="obraInput"
+                type="text"
+                placeholder="Digite o nome da obra"
+                value={obraSelecionada}
+                onChange={(e) => handleFiltrarObras(e.target.value)}
+            />
+            
+            {/* Botão "X" para limpar a pesquisa */}
+            {obraSelecionada && (
+                <span className="clear-btn" onClick={() => setObraSelecionada("")}>×</span>
+            )}
+
+            {filtrandoObras.length > 0 && (
+                <ul className="autocomplete-list mostrar">
+                    {filtrandoObras.map((obra) => (
+                        <li key={obra.id} onClick={() => handleSelecionarObra(obra)}>
+                            {obra.titulo}
+                        </li>
+                    ))}
+                </ul>
+            )}
           </div>
-  
-          {/* Campo de busca para locais */}
-          <div className="autocomplete-container">
-              <input
-                  type="text"
-                  placeholder="Digite o local de armazenamento"
-                  value={localSelecionado}
-                  onChange={(e) => handleFiltrarLocais(e.target.value)}
-              />
-              {filtrandoLocais.length > 0 && (
-                  <ul className={`autocomplete-list ${filtrandoLocais.length > 0 ? "mostrar" : ""}`}>
-                      {filtrandoLocais.map((local) => (
-                          <li key={local.id} onClick={() => handleSelecionarLocal(local)}>
-                              {local.nome}
-                          </li>
-                      ))}
-                  </ul>
-              )}
-          </div>
-  
+
+        {/* Campo de busca para locais */}
+        <div className="autocomplete-container">
+          <input
+              id="localInput"
+              type="text"
+              placeholder="Digite o local de armazenamento"
+              value={localSelecionado}
+              onChange={(e) => handleFiltrarLocais(e.target.value)}
+          />
+          
+          {/* Botão "X" para limpar a pesquisa */}
+          {localSelecionado && (
+              <span className="clear-btn" onClick={() => setLocalSelecionado("")}>×</span>
+          )}
+
+          {filtrandoLocais.length > 0 && (
+              <ul className="autocomplete-list mostrar">
+                  {filtrandoLocais.map((local) => (
+                      <li key={local.id} onClick={() => handleSelecionarLocal(local)}>
+                          {local.nome}
+                      </li>
+                  ))}
+              </ul>
+          )}
+      </div>
           {/* Botão para registrar movimentação */}
           <button onClick={handleRegistrar}>Registrar</button>
   
