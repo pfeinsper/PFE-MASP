@@ -1,5 +1,4 @@
-
-require("dotenv").config(); // Carrega variáveis de ambiente do arquivo .env
+require("dotenv").config(); 
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -17,37 +16,40 @@ const pool = new Pool({
 });
 
 // Middlewares
-app.use(cors()); // Permite requisições do frontend
-app.use(express.json()); // Habilita o uso de JSON nas requisições
+app.use(cors());
+app.use(express.json());
 
-// 🚀 **Rota de teste**
+// ---------------------------------------------------------
+// Rota de teste: GET "/"
 app.get("/", (req, res) => {
   res.send("API do MASP está rodando!");
 });
 
-// ✅ **Listar todas as obras**
+// ---------------------------------------------------------
+// 4.1. Listar todas as obras
 app.get("/obras", async (req, res) => {
-    try {
-        const { search } = req.query; // Obtém o termo de busca da URL
+  try {
+    const { search } = req.query;
 
-        let query = "SELECT * FROM obras";
-        let values = [];
+    let query = "SELECT * FROM obras";
+    let values = [];
 
-        if (search) {
-            query += " WHERE titulo ILIKE $1 OR id::TEXT ILIKE $1";
-            values.push(`%${search}%`);
-        }
-
-        const result = await pool.query(query, values);
-        res.json(result.rows);
-    } catch (error) {
-        console.error("Erro ao buscar obras:", error);
-        res.status(500).send("Erro no servidor");
+    if (search) {
+      // Se tiver parâmetro ?search=..., filtra por título ou id
+      query += " WHERE titulo ILIKE $1 OR id::TEXT ILIKE $1";
+      values.push(`%${search}%`);
     }
+
+    const result = await pool.query(query, values);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Erro ao buscar obras:", error);
+    res.status(500).send("Erro no servidor");
+  }
 });
 
-
-// ✅ **Listar todos os locais**
+// ---------------------------------------------------------
+// 4.2. Listar todos os locais
 app.get("/locais", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM locais");
@@ -58,15 +60,15 @@ app.get("/locais", async (req, res) => {
   }
 });
 
-// ✅ **Listar todas as movimentações (com nomes das obras e locais)**
+// ---------------------------------------------------------
+// 4.3. Listar todas as movimentações
+//     (aqui você optou por mostrar todos os campos da tabela movimentacoes)
 app.get("/movimentacoes", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT m.id, o.titulo AS obra_nome, l.nome AS local_nome, m.data_movimentacao 
-      FROM movimentacoes m
-      JOIN obras o ON m.obra_id = o.id
-      JOIN locais l ON m.local_id = l.id
-      ORDER BY m.data_movimentacao DESC
+      SELECT *
+      FROM movimentacoes
+      ORDER BY data_movimentacao DESC
     `);
     res.json(result.rows);
   } catch (error) {
@@ -75,29 +77,43 @@ app.get("/movimentacoes", async (req, res) => {
   }
 });
 
-// ✅ **Adicionar uma nova movimentação**
+// ---------------------------------------------------------
+// 4.4. Adicionar uma nova movimentação
 app.post("/movimentacoes", async (req, res) => {
-    try {
-        const { obra_id, local_id } = req.body;
+  try {
+    // Pega obra_id, local_id do corpo da requisição (enviado pelo React)
+    const { obra_id, local_id } = req.body;
 
-        if (!obra_id || !local_id) {
-            return res.status(400).json({ error: "Obra e local são obrigatórios." });
-        }
-
-        // Inserindo no banco
-        const result = await pool.query(
-            "INSERT INTO movimentacoes (obra_id, local_id) VALUES ($1, $2) RETURNING *",
-            [obra_id, local_id]
-        );
-
-        res.status(201).json(result.rows[0]); // Retorna a movimentação inserida
-    } catch (error) {
-        console.error("Erro ao adicionar movimentação:", error);
-        res.status(500).send("Erro no servidor");
+    // Validação básica
+    if (!obra_id || !local_id) {
+      return res.status(400).json({ error: "Obra e local são obrigatórios." });
     }
+
+    // Faz INSERT, mas usando subconsultas para buscar o nome da obra e local:
+    // (SELECT titulo FROM obras WHERE id = $1) -> preenche 'obra_nome'
+    // (SELECT nome   FROM locais WHERE id = $2) -> preenche 'local_nome'
+    const result = await pool.query(
+      `INSERT INTO movimentacoes (obra_id, local_id, obra_nome, local_nome)
+       VALUES (
+         $1,
+         $2,
+         (SELECT titulo FROM obras WHERE id = $1),
+         (SELECT nome   FROM locais WHERE id = $2)
+       )
+       RETURNING *;`,
+      [obra_id, local_id]
+    );
+
+    // Retorna a movimentação recém-criada, incluindo obra_nome e local_nome
+    return res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao adicionar movimentação:", error);
+    return res.status(500).send("Erro no servidor");
+  }
 });
 
-// ✅ **Iniciar o servidor**
+// ---------------------------------------------------------
+// 4.5. Iniciar o servidor
 app.listen(port, () => {
   console.log(`✅ Servidor rodando em http://localhost:${port}`);
 });
