@@ -138,26 +138,27 @@ export default function Movimentacao() {
     // 3.8. Effects para atualizar a lista de filtragem conforme digitação
     //-----------------------------------------------------------------------
     useEffect(() => {
-      if (obraSelecionada.length > 0 && obras.length > 0) {
-          const filtradas = obras.filter((obra) =>
-              obra.titulo.toLowerCase().includes(obraSelecionada.toLowerCase())
-          );
-          setFiltrandoObras(filtradas);
-      } else {
-          setFiltrandoObras([]);
-      }
-    }, [obraSelecionada, obras]);
+        if (obraSelecionada.length > 0 && obras.length > 0 && obraId === null) {
+            const filtradas = obras.filter((obra) =>
+                obra.titulo.toLowerCase().includes(obraSelecionada.toLowerCase())
+            );
+            setFiltrandoObras(filtradas);
+        } else {
+            setFiltrandoObras([]);
+        }
+    }, [obraSelecionada, obras, obraId]);
+    
   
     useEffect(() => {
-      if (localSelecionado.length > 0 && locais.length > 0) {
-          const filtrados = locais.filter((local) =>
-              local.nome.toLowerCase().includes(localSelecionado.toLowerCase())
-          );
-          setFiltrandoLocais(filtrados);
-      } else {
-          setFiltrandoLocais([]);
-      }
-    }, [localSelecionado, locais]);
+        if (localSelecionado.length > 0 && locais.length > 0 && localId === null) {
+            const filtrados = locais.filter((local) =>
+                local.nome.toLowerCase().includes(localSelecionado.toLowerCase())
+            );
+            setFiltrandoLocais(filtrados);
+        } else {
+            setFiltrandoLocais([]);
+        }
+    }, [localSelecionado, locais, localId]);
   
     //-----------------------------------------------------------------------
     // 3.9. Renderização do componente: Inputs, listagens de autocomplete, botão

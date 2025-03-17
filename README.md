@@ -77,7 +77,7 @@ RETURNING *;
 ### 1. server.js (Backend em Node/Express)
 - O que faz?
     - É o servidor do lado do Node.js que expõe as rotas da sua API para o frontend.
-    - Conecta-se ao banco de dados PostgreSQL usando pg (Pool).
+    - Conecta-se ao banco de dados PostgreSQL usando pg (Pool) (estamos usando pgAdmin 4).
     - Define rotas como /obras, /locais e /movimentacoes.
     - Cada rota faz consultas ou inserções no banco de dados e retorna JSON.
 
