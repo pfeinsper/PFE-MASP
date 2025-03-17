@@ -62,7 +62,6 @@ app.get("/locais", async (req, res) => {
 
 // ---------------------------------------------------------
 // 4.3. Listar todas as movimentações
-//     (aqui você optou por mostrar todos os campos da tabela movimentacoes)
 app.get("/movimentacoes", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -115,5 +114,5 @@ app.post("/movimentacoes", async (req, res) => {
 // ---------------------------------------------------------
 // 4.5. Iniciar o servidor
 app.listen(port, () => {
-  console.log(`✅ Servidor rodando em http://localhost:${port}`);
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });
