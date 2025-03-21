@@ -80,30 +80,38 @@ app.get("/movimentacoes", async (req, res) => {
 // 4.4. Adicionar uma nova movimentação
 app.post("/movimentacoes", async (req, res) => {
   try {
-    // Pega obra_id, local_id do corpo da requisição (enviado pelo React)
-    const { obra_id, local_id } = req.body;
+    const { obra_id, local_id, usuario_id, tipo_movimentacao } = req.body;
 
-    // Validação básica
+    // Validações
     if (!obra_id || !local_id) {
       return res.status(400).json({ error: "Obra e local são obrigatórios." });
     }
+    if (!usuario_id) {
+      return res.status(400).json({ error: "Usuário é obrigatório." });
+    }
+    if (!tipo_movimentacao) {
+      return res.status(400).json({ error: "Tipo de movimentação é obrigatório." });
+    }
 
-    // Faz INSERT, mas usando subconsultas para buscar o nome da obra e local:
-    // (SELECT titulo FROM obras WHERE id = $1) -> preenche 'obra_nome'
-    // (SELECT nome   FROM locais WHERE id = $2) -> preenche 'local_nome'
-    const result = await pool.query(
-      `INSERT INTO movimentacoes (obra_id, local_id, obra_nome, local_nome)
-       VALUES (
-         $1,
-         $2,
-         (SELECT titulo FROM obras WHERE id = $1),
-         (SELECT nome   FROM locais WHERE id = $2)
-       )
-       RETURNING *;`,
-      [obra_id, local_id]
-    );
+    // Faz INSERT, incluindo 'usuario_id' e subconsulta para usuario_nome
+    const query = `
+      INSERT INTO movimentacoes 
+        (obra_id, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao)
+      VALUES (
+        $1, 
+        $2,
+        (SELECT titulo FROM obras    WHERE id = $1),
+        (SELECT nome   FROM locais   WHERE id = $2),
+        $3,
+        (SELECT nome   FROM usuarios WHERE id = $3),
+        $4
+      )
+      RETURNING *;
+    `;
+    const values = [obra_id, local_id, usuario_id, tipo_movimentacao];
 
-    // Retorna a movimentação recém-criada, incluindo obra_nome e local_nome
+    const result = await pool.query(query, values);
+
     return res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Erro ao adicionar movimentação:", error);
@@ -115,4 +123,15 @@ app.post("/movimentacoes", async (req, res) => {
 // 4.5. Iniciar o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
+});
+
+// 4.6. Listar todos os usuários
+app.get("/usuarios", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM usuarios ORDER BY nome");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Erro ao buscar usuários:", error);
+    res.status(500).send("Erro no servidor");
+  }
 });

@@ -114,3 +114,61 @@ button:hover {
 .clear-btn:hover {
   color: #d50000;
 }
+
+/* Estiliza o select para combinar com os inputs */
+select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: white;
+  cursor: pointer;
+  appearance: none; /* Remove o estilo padrão do navegador */
+  -webkit-appearance: none; /* Safari e Chrome */
+  -moz-appearance: none; /* Firefox */
+}
+
+/* Quando o select estiver focado */
+select:focus {
+  outline: none;
+  border-color: black;
+}
+
+/* Ajuste para o label ficar alinhado corretamente */
+label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 5px;
+  text-align: left;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Adiciona seta customizada no select */
+.select-container {
+  position: relative;
+  width: 100%;
+}
+
+.select-container::after {
+  content: "▼";
+  font-size: 14px;
+  color: #888;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Estiliza a opção placeholder do select para ficar cinza */
+option[value=""] {
+  color: #00000000;
+}
+
+/* Garante que a opção "Selecione a movimentação" continue cinza quando selecionada */
+select:invalid {
+  color: #888;
+}
