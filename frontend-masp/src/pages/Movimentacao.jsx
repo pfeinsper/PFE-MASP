@@ -174,6 +174,41 @@ export default function Movimentacao() {
     <div className="container">
       <h1>Movimentação de Obras</h1>
 
+      {/* Campo de busca para usuários (autocomplete) */}
+      <div className="autocomplete-container">
+        <input
+          id="usuarioInput"
+          type="text"
+          placeholder="Digite o nome do usuário"
+          value={usuarioSelecionado}
+          onChange={(e) => {
+            setUsuarioId(null);
+            handleFiltrarUsuarios(e.target.value);
+          }}
+        />
+        {usuarioSelecionado && (
+          <span
+            className="clear-btn"
+            onClick={() => {
+              setUsuarioSelecionado("");
+              setUsuarioId(null);
+            }}
+          >
+            ×
+          </span>
+        )}
+
+        {filtrandoUsuarios.length > 0 && (
+          <ul className="autocomplete-list mostrar">
+            {filtrandoUsuarios.map((user) => (
+              <li key={user.id} onClick={() => handleSelecionarUsuario(user)}>
+                {user.nome}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {/* Campo de busca para obras (autocomplete) */}
       <div className="autocomplete-container">
         <input
@@ -238,41 +273,6 @@ export default function Movimentacao() {
             {filtrandoLocais.map((local) => (
               <li key={local.id} onClick={() => handleSelecionarLocal(local)}>
                 {local.nome}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Campo de busca para usuários (autocomplete) */}
-      <div className="autocomplete-container">
-        <input
-          id="usuarioInput"
-          type="text"
-          placeholder="Digite o nome do usuário"
-          value={usuarioSelecionado}
-          onChange={(e) => {
-            setUsuarioId(null);
-            handleFiltrarUsuarios(e.target.value);
-          }}
-        />
-        {usuarioSelecionado && (
-          <span
-            className="clear-btn"
-            onClick={() => {
-              setUsuarioSelecionado("");
-              setUsuarioId(null);
-            }}
-          >
-            ×
-          </span>
-        )}
-
-        {filtrandoUsuarios.length > 0 && (
-          <ul className="autocomplete-list mostrar">
-            {filtrandoUsuarios.map((user) => (
-              <li key={user.id} onClick={() => handleSelecionarUsuario(user)}>
-                {user.nome}
               </li>
             ))}
           </ul>
