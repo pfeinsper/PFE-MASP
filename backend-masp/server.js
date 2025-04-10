@@ -1,4 +1,4 @@
-require("dotenv").config(); 
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -26,11 +26,10 @@ app.get("/", (req, res) => {
 });
 
 // ---------------------------------------------------------
-// 4.1. Listar todas as obras
+// 4.1. Listar todas as obras (para quem ainda quiser usar autocomplete, se necessário)
 app.get("/obras", async (req, res) => {
   try {
     const { search } = req.query;
-
     let query = "SELECT * FROM obras";
     let values = [];
 
@@ -49,6 +48,23 @@ app.get("/obras", async (req, res) => {
 });
 
 // ---------------------------------------------------------
+// 4.1.B. Buscar obra via QR/código (ex: ID da obra) -> /obras/codigo/:codigo
+app.get("/obras/codigo/:codigo", async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    // Exemplo: se a coluna 'id' já guarda algo como "MASP.00610"
+    const result = await pool.query("SELECT * FROM obras WHERE id = $1", [codigo]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Obra não encontrada" });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao buscar obra pelo código:", error);
+    res.status(500).send("Erro no servidor");
+  }
+});
+
+// ---------------------------------------------------------
 // 4.2. Listar todos os locais
 app.get("/locais", async (req, res) => {
   try {
@@ -56,6 +72,23 @@ app.get("/locais", async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("Erro ao buscar locais:", error);
+    res.status(500).send("Erro no servidor");
+  }
+});
+
+// ---------------------------------------------------------
+// 4.2.B. Buscar local via QR/código -> /locais/codigo/:codigo
+app.get("/locais/codigo/:codigo", async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    // Se o 'id' da tabela locais for INT ou TEXT, use do mesmo jeito:
+    const result = await pool.query("SELECT * FROM locais WHERE id = $1", [codigo]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Local não encontrado" });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao buscar local pelo código:", error);
     res.status(500).send("Erro no servidor");
   }
 });
@@ -111,7 +144,6 @@ app.post("/movimentacoes", async (req, res) => {
     const values = [obra_id, local_id, usuario_id, tipo_movimentacao];
 
     const result = await pool.query(query, values);
-
     return res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Erro ao adicionar movimentação:", error);
