@@ -7,7 +7,6 @@ import Search from "./pages/Search";
 import Movimentacao from "./pages/Movimentacao";
 import CriarQRCodeManual from "./pages/CriarQRCode";
 
-
 export default function App() {
   return (
     <Router>
@@ -19,7 +18,7 @@ export default function App() {
         <Route path="/" element={<Movimentacao />} />
         <Route path="/search" element={<Search />} />
         <Route path="/movimentacao" element={<Movimentacao />} />
-        <Route path="/criar-qrcode" element={<CriarQRCodeManual />} />
+        <Route path="/gerar-qr" element={<CriarQRCodeManual />} />
       </Routes>
     </Router>
   );
