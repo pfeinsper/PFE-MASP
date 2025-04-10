@@ -2,9 +2,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar"; // Importando o Navbar
-import Login from "./pages/Login";
+// import Login from "./pages/Login";
 import Search from "./pages/Search";
 import Movimentacao from "./pages/Movimentacao";
+import CriarQRCodeManual from "./pages/CriarQRCode";
+
 
 export default function App() {
   return (
@@ -17,6 +19,7 @@ export default function App() {
         <Route path="/" element={<Movimentacao />} />
         <Route path="/search" element={<Search />} />
         <Route path="/movimentacao" element={<Movimentacao />} />
+        <Route path="/criar-qrcode" element={<CriarQRCodeManual />} />
       </Routes>
     </Router>
   );
