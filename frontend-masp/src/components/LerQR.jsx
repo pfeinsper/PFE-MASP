@@ -4,40 +4,40 @@ import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 
 export default function LerQR({ onScanResult, onClose }) {
   const scannerRef = useRef(null);
+  const scannerContainerId = "reader";
 
   useEffect(() => {
-    const scanner = new Html5Qrcode("reader");
+    const scanner = new Html5Qrcode(scannerContainerId);
     scannerRef.current = scanner;
 
-    // 🔥 CORREÇÃO: limpa o conteúdo anterior
-    const readerElem = document.getElementById("reader");
+    const readerElem = document.getElementById(scannerContainerId);
     if (readerElem) {
       readerElem.innerHTML = "";
     }
 
-    // Inicia o scanner
     scanner
       .start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.333,
+        },
         (decodedText) => {
           console.log("✅ QR detectado:", decodedText);
           scanner
             .stop()
-            .catch(() => {}) // ignora erro se scanner já estiver parado
+            .catch(() => {})
             .finally(() => {
               onScanResult(decodedText);
             });
         },
-        (errorMessage) => {
-          // Erros "normais" como NotFound são ignorados aqui
-        }
+        (err) => {}
       )
       .catch((err) => {
         console.error("Erro ao iniciar câmera:", err);
       });
 
-    // Cleanup: parar o scanner ao desmontar
     return () => {
       if (scannerRef.current) {
         const state = scannerRef.current.getState();
@@ -53,9 +53,27 @@ export default function LerQR({ onScanResult, onClose }) {
 
   return (
     <div style={{ textAlign: "center" }}>
-      <div id="reader" style={{ width: "100%", maxWidth: "500px" }} />
+      <div
+        id={scannerContainerId}
+        style={{
+          width: "100%",
+          maxWidth: "360px",
+          height: "270px", // <- 👈 altura fixa realista (4:3)
+          overflow: "hidden", // <- 👈 impede a duplicação da imagem
+          margin: "0 auto",
+          borderRadius: "10px",
+        }}
+      />
       <button
-        style={{ marginTop: "20px" }}
+        style={{
+          marginTop: "20px",
+          backgroundColor: "#d50000",
+          color: "#fff",
+          padding: "10px 20px",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
         onClick={() => {
           if (scannerRef.current) {
             const state = scannerRef.current.getState();
