@@ -58,6 +58,7 @@ export default function Movimentacao() {
       const obra = res.data;
       setObraId(obra.id);
       setObraNome(obra.titulo || obra.nome || "");
+      // setObraNome(obra.titulo);
     } catch (err) {
       console.error("Erro ao buscar obra pelo código:", err);
       setMensagem("Obra não encontrada ou erro no servidor.");
