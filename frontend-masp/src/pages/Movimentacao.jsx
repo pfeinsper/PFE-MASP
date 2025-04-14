@@ -160,7 +160,23 @@ export default function Movimentacao() {
       {/* ---------- QR CODE OBRA ---------- */}
       <div style={{ marginTop: 20 }}>
         <label style={{ display: "block", textAlign: "left" }}>Obra selecionada:</label>
-        <p>{obraId ? `ID: ${obraId} | ${obraNome}` : "(Nenhuma obra lida)"}</p>
+        <div style={{ position: "relative" }}>
+          <p>
+            {obraId ? `ID: ${obraId} | ${obraNome}` : "(Nenhuma obra lida)"}
+            {obraId && (
+              <span
+                className="clear-btn"
+                style={{ right: "-5px", top: "5px" }}
+                onClick={() => {
+                  setObraId(null);
+                  setObraNome("");
+                }}
+              >
+                ×
+              </span>
+            )}
+          </p>
+        </div>
 
         {!obraId && (
           <button onClick={() => setLerObra(true)}>Escanear QR da Obra</button>
@@ -181,7 +197,23 @@ export default function Movimentacao() {
       {/* ---------- QR CODE LOCAL ---------- */}
       <div style={{ marginTop: 20 }}>
         <label style={{ display: "block", textAlign: "left" }}>Local selecionado:</label>
-        <p>{localId ? `ID: ${localId} | ${localNome}` : "(Nenhum local lido)"}</p>
+        <div style={{ position: "relative" }}>
+          <p>
+            {localId ? `ID: ${localId} | ${localNome}` : "(Nenhum local lido)"}
+            {localId && (
+              <span
+                className="clear-btn"
+                style={{ right: "-5px", top: "5px" }}
+                onClick={() => {
+                  setLocalId(null);
+                  setLocalNome("");
+                }}
+              >
+                ×
+              </span>
+            )}
+          </p>
+        </div>
 
         {!localId && (
           <button onClick={() => setLerLocal(true)}>Escanear QR do Local</button>
@@ -198,6 +230,7 @@ export default function Movimentacao() {
           </div>
         )}
       </div>
+
 
       {/* ---------- TIPO MOVIMENTAÇÃO ---------- */}
       <div className="select-container" style={{ marginTop: 20 }}>
