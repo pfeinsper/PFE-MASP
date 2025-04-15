@@ -1,37 +1,47 @@
-/* Definição da fonte padrão */
+/* Font-face ou import do Google Fonts (exemplo: Open Sans) */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Open Sans', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
+  /* Gradiente sutil no fundo */
+  background: linear-gradient(45deg, #f7f7f7, #f0f0f0);
 }
 
-/* Container para centralizar o conteúdo */
+/* Container centralizado, com fundo levemente translúcido */
 .container {
   max-width: 600px;
-  margin: 120px auto;
+  margin: 80px auto 40px; /* 80px p/ compensar a navbar de 60px */
   padding: 20px;
-  background: white;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
   text-align: center;
 }
 
-/* Títulos */
+/* Títulos (ex: h1 na Movimentacao, h1 na CriarQRCode) */
 h1 {
   color: #d50000;
-  font-size: 24px;
+  font-size: 28px;
   margin-bottom: 20px;
+  font-weight: 600;
 }
 
-/* Campos de entrada */
+/* Inputs (autocomplete, etc.) */
 input {
   width: 96%;
-  padding: 10px;
+  padding: 12px;
   margin: 10px 0;
-  border: 2px solid #ccc;
+  border: 2px solid #ddd;
   border-radius: 5px;
   font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #d50000;
 }
 
 /* Botões */
@@ -39,28 +49,31 @@ button {
   background-color: #d50000;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 12px;
   width: 100%;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
   margin-top: 20px;
+  transition: background-color 0.2s;
+  font-weight: 500;
 }
 
 button:hover {
   background-color: #b00000;
 }
 
-/* Ajusta a posição da lista para ficar logo abaixo do input */
+/* Autocomplete container */
 .autocomplete-container {
   position: relative;
   width: 100%;
 }
 
+/* Lista de autocomplete */
 .autocomplete-list {
   display: none;
   position: absolute;
-  top: 100%; /* Garante que a lista fique exatamente abaixo do input */
+  top: 100%; 
   left: 0;
   width: 100%;
   background: white;
@@ -70,37 +83,33 @@ button:hover {
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
-  padding: 0; /* Remove espaços extras */
-  margin-top: 2px; /* Pequeno ajuste para evitar sobreposição */
+  padding: 0;
+  margin-top: 2px;
 }
-
-/* Garante que a lista seja visível apenas quando necessário */
 .autocomplete-list.mostrar {
   display: block !important;
 }
-
-/* Ajusta o espaçamento dos itens na lista */
 .autocomplete-list li {
   padding: 10px;
   cursor: pointer;
   transition: background 0.2s;
   font-size: 16px;
   text-align: left;
-  list-style: none; /* Remove o marcador de lista */
+  list-style: none;
 }
-
 .autocomplete-list li:hover {
-  background: #f0f0f0;
+  background: #f9f9f9;
 }
 
-
-/* Melhorar a aparência da mensagem de erro */
+/* Mensagem de sucesso/erro */
 .mensagem {
   color: green;
   font-size: 16px;
   margin-top: 10px;
+  font-weight: 500;
 }
 
+/* Botão "X" para limpar */
 .clear-btn {
   position: absolute;
   right: 15px;
@@ -108,35 +117,38 @@ button:hover {
   transform: translateY(-50%);
   cursor: pointer;
   font-size: 20px;
-  color: #888;
+  color: #aaa;
+  transition: color 0.2s;
 }
-
 .clear-btn:hover {
   color: #d50000;
 }
 
-/* Estiliza o select para combinar com os inputs */
+/* Select estilizado */
 select {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin: 10px 0;
-  border: 2px solid #ccc;
+  border: 2px solid #ddd;
   border-radius: 5px;
   font-size: 16px;
   background-color: white;
   cursor: pointer;
-  appearance: none; /* Remove o estilo padrão do navegador */
-  -webkit-appearance: none; /* Safari e Chrome */
-  -moz-appearance: none; /* Firefox */
+  appearance: none;
+  transition: border-color 0.2s;
 }
-
-/* Quando o select estiver focado */
 select:focus {
   outline: none;
-  border-color: black;
+  border-color: #d50000;
+}
+option[value=""] {
+  color: #bbb;
+}
+select:invalid {
+  color: #bbb;
 }
 
-/* Ajuste para o label ficar alinhado corretamente */
+/* label */
 label {
   display: block;
   font-size: 16px;
@@ -146,52 +158,105 @@ label {
   color: #333;
 }
 
-/* Adiciona seta customizada no select */
-.select-container {
-  position: relative;
-  width: 100%;
-}
-
-.select-container::after {
-  content: "▼";
-  font-size: 14px;
-  color: #888;
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-/* Estiliza a opção placeholder do select para ficar cinza */
-option[value=""] {
-  color: #00000000;
-}
-
-/* Garante que a opção "Selecione a movimentação" continue cinza quando selecionada */
-select:invalid {
-  color: #888;
-}
-
+/* Overlay p/ QR Scanner */
 .overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .qr-container {
   background: white;
-  padding: 20px;
+  padding: 24px;
   border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
   text-align: center;
-  width: 90%;
+  width: 95%;
   max-width: 600px;
 }
 
+/* Estiliza a navbar fixa no topo */
+.navbar {
+  background-color: #fff;
+  height: 60px;
+  padding: 0 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.logo {
+  margin: 0;
+  color: #d50000;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.hamburguer {
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #d50000;
+  margin-right: 2%; /* <-- novo: puxa ele pra esquerda */
+}
+
+/* Menu lateral (right side) */
+.menu-right {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 250px;
+  height: 100%;
+  background-color: #d50000;
+  transition: right 0.4s ease-in-out;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 80px;
+}
+
+.menu-right.open {
+  right: 0;
+}
+
+.menu-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-content a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 20px;
+  padding: 15px;
+  transition: background 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.menu-content a:hover {
+  background-color: rgba(255,255,255,0.15);
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 26px;
+  color: white;
+  cursor: pointer;
+}

@@ -1,29 +1,28 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import "./Navbar.css"; // Importando o CSS do Navbar
+import "./Navbar.css";
 
 export default function Navbar() {
   const [menuAberto, setMenuAberto] = useState(false);
 
+  const toggleMenu = () => setMenuAberto(!menuAberto);
+
   return (
     <>
       <div className="navbar">
-        <h1>Capstone Insper - MASP</h1>
-        <div
-          className="hamburguer"
-          onClick={() => setMenuAberto(!menuAberto)}
-        >
+        <h1 className="logo">Capstone Insper - MASP</h1>
+        <div className="hamburguer" onClick={toggleMenu}>
           ☰
         </div>
       </div>
 
-      {menuAberto && (
-        <div className="menu">
-          <Link to="/" onClick={() => setMenuAberto(false)}>Login</Link>
-          <Link to="/search" onClick={() => setMenuAberto(false)}>Pesquisar Obras</Link>
-          <Link to="/movimentacao" onClick={() => setMenuAberto(false)}>Movimentação</Link>
+      <div className={`menu-right ${menuAberto ? "open" : ""}`}>
+        <div className="menu-content">
+          <span className="close-btn" onClick={toggleMenu}>×</span>
+          <Link to="/movimentacao" onClick={toggleMenu}>Movimentação</Link>
+          <Link to="/gerar-qr" onClick={toggleMenu}>Gerar QR Code</Link>
         </div>
-      )}
+      </div>
     </>
   );
 }
