@@ -167,7 +167,7 @@ export default function Movimentacao() {
             {obraId && (
               <span
                 className="clear-btn"
-                style={{ right: "-5px", top: "5px" }}
+                style={{ right: "-6px", top: "5px" }}
                 onClick={() => {
                   setObraId(null);
                   setObraNome("");

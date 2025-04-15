@@ -68,7 +68,7 @@ export default function CriarQRCodeManual() {
   return (
     <div className="container">
       <h1>Gerar QR Code</h1>
-      <p>Digite o <strong>ID da obra</strong> ou <strong>ID do local</strong> para gerar o QR Code.</p>
+      <p className="TextoNormal">Digite o <strong>ID da obra</strong> ou <strong>ID do local</strong> para gerar o QR Code.</p>
 
       <input
         type="text"

@@ -28,6 +28,18 @@ h1 {
   font-weight: 600;
 }
 
+p {
+  font-size: 17px; 
+  color: orangered;
+  font-style: italic;
+}
+
+.TextoNormal {
+  font-size: 17px; 
+  color: black;
+  font-style: normal;
+}
+
 /* Inputs (autocomplete, etc.) */
 input {
   width: 96%;
@@ -35,7 +47,7 @@ input {
   margin: 10px 0;
   border: 2px solid #ddd;
   border-radius: 5px;
-  font-size: 16px;
+  font-size: 17px;
   transition: border-color 0.2s;
 }
 
@@ -53,10 +65,12 @@ button {
   width: 100%;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 17px;
   margin-top: 20px;
   transition: background-color 0.2s;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 button:hover {
@@ -104,7 +118,7 @@ button:hover {
 /* Mensagem de sucesso/erro */
 .mensagem {
   color: green;
-  font-size: 16px;
+  font-size: 17x;
   margin-top: 10px;
   font-weight: 500;
 }
@@ -131,7 +145,7 @@ select {
   margin: 10px 0;
   border: 2px solid #ddd;
   border-radius: 5px;
-  font-size: 16px;
+  font-size: 17px;
   background-color: white;
   cursor: pointer;
   appearance: none;
@@ -142,16 +156,17 @@ select:focus {
   border-color: #d50000;
 }
 option[value=""] {
-  color: #bbb;
+  color: #a2a2a2;
 }
 select:invalid {
-  color: #bbb;
+  color: #a2a2a2;
 }
 
 /* label */
 label {
   display: block;
-  font-size: 16px;
+  font-size: 18px;
+  font-style: bold;
   margin-bottom: 5px;
   text-align: left;
   font-weight: bold;
