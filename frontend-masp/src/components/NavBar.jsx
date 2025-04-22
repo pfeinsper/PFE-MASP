@@ -1,19 +1,29 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import LogoMASP from "../assets/Logo_MASP.png";
 
-
 export default function Navbar() {
   const [menuAberto, setMenuAberto] = useState(false);
+  const navigate = useNavigate(); 
 
   const toggleMenu = () => setMenuAberto(!menuAberto);
+
+  const handleLogoClick = () => {
+    localStorage.removeItem("token");  
+    navigate("/");                     
+  };
 
   return (
     <>
       <div className="navbar">
-        {/* <h1 className="logo">Capstone Insper - MASP</h1> */}
-        <img className="logo" src={LogoMASP} alt="Logo MASP" />
+        <img
+          className="logo"
+          src={LogoMASP}
+          alt="Logo MASP"
+          style={{ cursor: "pointer" }}
+          onClick={handleLogoClick}
+        />
         <div className="hamburguer" onClick={toggleMenu}>
           ☰
         </div>

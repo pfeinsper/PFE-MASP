@@ -6,18 +6,46 @@ const { Pool } = require("pg");
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Autenticação JWT e criptografia de senhas
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+
 // Configuração do PostgreSQL
+// const pool = new Pool({
+//   user: process.env.DB_USER || "postgres",
+//   host: process.env.DB_HOST || "localhost",
+//   database: process.env.DB_NAME || "masp_db",
+//   password: process.env.DB_PASSWORD || "admin",
+//   port: process.env.DB_PORT || 5432,
+// });
 const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "masp_db",
-  password: process.env.DB_PASSWORD || "admin",
-  port: process.env.DB_PORT || 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+/* ---------------------- 🔐 Middleware de autenticação ---------------------- */
+function autenticarToken(req, res, next) {
+  const authHeader = req.headers.authorization; // ex: "Bearer <token>"
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
+    if (err) return res.sendStatus(403); // Token inválido
+    req.usuario = usuario;
+
+    // Mostra quem fez a requisição
+    console.log("Usuário autenticado:", usuario.nome);
+    next(); // prossegue para a rota
+  });
+}
 
 // ---------------------------------------------------------
 // Rota de teste: GET "/"
@@ -213,6 +241,46 @@ app.get("/movimentacoes/obra/:obra_id", async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("Erro ao buscar movimentações da obra:", error);
+    res.status(500).send("Erro no servidor");
+  }
+});
+
+// ---------------------------------------------------------
+// 5.1 Login de usuários com verificação de senha e geração de token
+app.post("/login", async (req, res) => {
+  const { nome, senha } = req.body;
+
+  if (!nome || !senha) {
+    return res.status(400).json({ error: "Nome e senha são obrigatórios" });
+  }
+
+  try {
+    const result = await pool.query("SELECT * FROM usuarios WHERE nome = $1", [nome]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({ error: "Usuário não encontrado" });
+    }
+
+    // Verifica a senha
+    // const senhaCorreta = await bcrypt.compare(senha, user.senha_hash);
+    // if (!senhaCorreta) {
+    //   return res.status(401).json({ error: "Senha incorreta" });
+    // }
+
+    // Verificação simples (sem hash por enquanto)
+    if (senha !== user.senha) {
+      return res.status(401).json({ error: "Senha incorreta" });
+    }
+
+    // Gera token JWT
+    const token = jwt.sign({ id: user.id, nome: user.nome }, process.env.JWT_SECRET, {
+      expiresIn: "8h",
+    });
+
+    res.json({ token });
+  } catch (error) {
+    console.error("Erro no login:", error);
     res.status(500).send("Erro no servidor");
   }
 });
