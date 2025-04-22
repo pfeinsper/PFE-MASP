@@ -191,3 +191,28 @@ app.get("/usuarios", async (req, res) => {
     res.status(500).send("Erro no servidor");
   }
 });
+
+// 4.7. Buscar movimentações de uma obra específica
+app.get("/movimentacoes/obra/:obra_id", async (req, res) => {
+  try {
+    const { obra_id } = req.params;
+
+    const query = `
+      SELECT 
+        tipo_movimentacao, 
+        data_movimentacao AS data, 
+        local_nome, 
+        usuario_nome
+      FROM movimentacoes
+      WHERE obra_id = $1
+      ORDER BY data_movimentacao DESC
+      LIMIT 10
+    `;
+
+    const result = await pool.query(query, [obra_id]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Erro ao buscar movimentações da obra:", error);
+    res.status(500).send("Erro no servidor");
+  }
+});
