@@ -72,10 +72,10 @@ export default function CriarQRCodeManual() {
 
       <input
         type="text"
+        className="fullWidthInput"
         value={codigo}
         onChange={(e) => setCodigo(e.target.value)}
         placeholder="Ex: MASP.00610 ou 3013"
-        style={{ width: "80%", padding: "10px", marginBottom: "10px" }}
       />
       <br />
       <button onClick={handleGerarQR}>Gerar QR Code</button>

@@ -64,6 +64,7 @@ export default function Search() {
       <div className="autocomplete-container" style={{ position: "relative" }}>
         <input
           type="text"
+          className="fullWidthInput"
           placeholder="Digite o nome ou ID da obra"
           value={termo}
           onChange={(e) => {

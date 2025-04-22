@@ -130,6 +130,7 @@ export default function Movimentacao() {
         <label style={{ display: "block", textAlign: "left" }}>Usuário</label>
         <input
           type="text"
+          className="fullWidthInput"
           placeholder="Digite o nome do usuário"
           value={usuarioSelecionado}
           onChange={(e) => {

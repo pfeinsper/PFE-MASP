@@ -309,3 +309,17 @@ label {
   color: #888;
   font-size: 14px;
 }
+
+.fullWidthInput {
+  width: 95%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 17px;
+  transition: border-color 0.2s;
+}
+.fullWidthInput:focus {
+  outline: none;
+  border-color: #d50000;
+}
