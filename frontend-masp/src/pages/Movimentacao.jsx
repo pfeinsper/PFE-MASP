@@ -13,6 +13,8 @@ export default function Movimentacao() {
   const [obraId, setObraId] = useState(null);
   const [obraNome, setObraNome] = useState("");
 
+  const [obraAutor, setObraAutor] = useState("");
+
   const [localId, setLocalId] = useState(null);
   const [localNome, setLocalNome] = useState("");
 
@@ -58,7 +60,7 @@ export default function Movimentacao() {
       const obra = res.data;
       setObraId(obra.id);
       setObraNome(obra.titulo || obra.nome || "");
-      // setObraNome(obra.titulo);
+      setObraAutor(obra.autoria || "");
     } catch (err) {
       console.error("Erro ao buscar obra pelo código:", err);
       setMensagem("Obra não encontrada ou erro no servidor.");
@@ -163,7 +165,7 @@ export default function Movimentacao() {
         <label style={{ display: "block", textAlign: "left" }}>Obra selecionada:</label>
         <div style={{ position: "relative" }}>
           <p>
-            {obraId ? `ID: ${obraId} | ${obraNome}` : "(Nenhuma obra lida)"}
+            {obraId ? `Nº Tombo: ${obraId} | Título: ${obraNome} | Autoria: ${obraAutor}` : "(Nenhuma obra lida)"}
             {obraId && (
               <span
                 className="clear-btn"
@@ -171,6 +173,7 @@ export default function Movimentacao() {
                 onClick={() => {
                   setObraId(null);
                   setObraNome("");
+                  setObraAutor("");
                 }}
               >
                 ×
