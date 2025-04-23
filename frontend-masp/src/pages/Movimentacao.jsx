@@ -5,89 +5,76 @@ import LerQR from "../components/LerQR";
 import "../index.css";
 
 export default function Movimentacao() {
-  const [usuarios, setUsuarios] = useState([]);
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState("");
+  // Estado do usuário logado
+  const [usuarioNome, setUsuarioNome] = useState("");
   const [usuarioId, setUsuarioId] = useState(null);
-  const [filtrandoUsuarios, setFiltrandoUsuarios] = useState([]);
 
+  // Estados de obra
   const [obraId, setObraId] = useState(null);
   const [obraNome, setObraNome] = useState("");
-
   const [obraAutor, setObraAutor] = useState("");
 
+  // Estados de local
   const [localId, setLocalId] = useState(null);
   const [localNome, setLocalNome] = useState("");
 
+  // Tipo e mensagens
   const [tipoSelecionado, setTipoSelecionado] = useState("");
   const [mensagem, setMensagem] = useState("");
 
+  // Flags de scanner
   const [lerObra, setLerObra] = useState(false);
   const [lerLocal, setLerLocal] = useState(false);
 
+  // Ao montar: decodifica o token para pegar id e nome do usuário
   useEffect(() => {
-    api
-      .get("/usuarios")
-      .then((res) => {
-        console.log("Usuários recebidos:", res.data);
-        setUsuarios(res.data);
-      })
-      .catch((err) => console.error("Erro ao buscar usuários:", err));
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const [, payloadB64] = token.split(".");
+        const payload = JSON.parse(atob(payloadB64));
+        setUsuarioId(payload.id);
+        setUsuarioNome(payload.nome);
+      } catch (e) {
+        console.error("Não foi possível decodificar o token.", e);
+      }
+    }
   }, []);
 
-  const handleFiltrarUsuarios = (termo) => {
-    setUsuarioSelecionado(termo);
-    if (termo.length > 0 && usuarios.length > 0) {
-      const filtrados = usuarios.filter((u) =>
-        u.nome.toLowerCase().includes(termo.toLowerCase())
-      );
-      setFiltrandoUsuarios(filtrados);
-    } else {
-      setFiltrandoUsuarios([]);
-    }
-  };
-
-  const handleSelecionarUsuario = (user) => {
-    setUsuarioSelecionado(user.nome);
-    setUsuarioId(user.id);
-    setFiltrandoUsuarios([]);
-  };
-
+  // Quando escaneia QR da obra
   const handleScanObra = async (codigo) => {
-    console.log("QR da obra detectado:", codigo);
     setLerObra(false);
     try {
       const res = await api.get(`/obras/codigo/${codigo}`);
       const obra = res.data;
       setObraId(obra.id);
-      setObraNome(obra.titulo || obra.nome || "");
+      setObraNome(obra.titulo || "");
       setObraAutor(obra.autoria || "");
-    } catch (err) {
-      console.error("Erro ao buscar obra pelo código:", err);
+    } catch {
       setMensagem("Obra não encontrada ou erro no servidor.");
     }
   };
 
+  // Quando escaneia QR do local
   const handleScanLocal = async (codigo) => {
-    console.log("QR do local detectado:", codigo);
     setLerLocal(false);
     try {
       const res = await api.get(`/locais/codigo/${codigo}`);
-      const local = res.data;
-      setLocalId(local.id);
-      setLocalNome(local.nome);
-    } catch (err) {
-      console.error("Erro ao buscar local pelo código:", err);
+      setLocalId(res.data.id);
+      setLocalNome(res.data.nome);
+    } catch {
       setMensagem("Local não encontrado ou erro no servidor.");
     }
   };
 
+  // Ao clicar em Registrar
   const handleRegistrar = async () => {
     if (!obraId || !localId) {
       setMensagem("Escaneie a obra e o local primeiro!");
       return;
     }
     if (!usuarioId) {
-      setMensagem("Selecione um usuário!");
+      setMensagem("Usuário não autenticado!");
       return;
     }
     if (!tipoSelecionado) {
@@ -95,28 +82,21 @@ export default function Movimentacao() {
       return;
     }
 
-    const payload = {
-      obra_id: obraId,
-      local_id: localId,
-      usuario_id: usuarioId,
-      tipo_movimentacao: tipoSelecionado,
-    };
-
-    console.log("Enviando movimentação:", payload);
-
     try {
-      await registrarMovimentacao(obraId, localId, usuarioId, tipoSelecionado);
+      await registrarMovimentacao(
+        obraId,
+        localId,
+        tipoSelecionado
+      );
       setMensagem("Movimentação registrada com sucesso!");
-
+      // limpa
       setObraId(null);
       setObraNome("");
+      setObraAutor("");
       setLocalId(null);
       setLocalNome("");
-      setUsuarioSelecionado("");
-      setUsuarioId(null);
       setTipoSelecionado("");
-    } catch (error) {
-      console.error("Erro ao registrar movimentação:", error);
+    } catch {
       setMensagem("Erro ao registrar movimentação.");
     }
   };
@@ -125,48 +105,22 @@ export default function Movimentacao() {
     <div className="container">
       <h1>Movimentação de Obras</h1>
 
-      {/* ---------- AUTOCOMPLETE ---------- */}
-      <div className="autocomplete-container">
-        <label style={{ display: "block", textAlign: "left" }}>Usuário</label>
-        <input
-          type="text"
-          className="fullWidthInput"
-          placeholder="Digite o nome do usuário"
-          value={usuarioSelecionado}
-          onChange={(e) => {
-            setUsuarioId(null);
-            handleFiltrarUsuarios(e.target.value);
-          }}
-          id="usuarioInput"
-        />
-        {usuarioSelecionado && (
-          <span
-            className="clear-btn"
-            onClick={() => {
-              setUsuarioSelecionado("");
-              setUsuarioId(null);
-            }}
-          >
-            ×
-          </span>
-        )}
-        {filtrandoUsuarios.length > 0 && (
-          <ul className="autocomplete-list mostrar">
-            {filtrandoUsuarios.map((u) => (
-              <li key={u.id} onClick={() => handleSelecionarUsuario(u)}>
-                {u.nome}
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* --- Exibe usuário logado --- */}
+      <div style={{ marginTop: 20, textAlign: "left" }}>
+        <label>Usuário</label>
+        <p style={{ fontWeight: "bold", fontSize: "16px", color: "orangered" }}>
+          {usuarioNome || "(não autenticado)"}
+        </p>
       </div>
 
-      {/* ---------- QR CODE OBRA ---------- */}
-      <div style={{ marginTop: 20 }}>
-        <label style={{ display: "block", textAlign: "left" }}>Obra selecionada:</label>
+      {/* --- Obra selecionada --- */}
+      <div style={{ marginTop: 20, textAlign: "left" }}>
+        <label>Obra selecionada:</label>
         <div style={{ position: "relative" }}>
           <p>
-            {obraId ? `Nº Tombo: ${obraId} | Título: ${obraNome} | Autoria: ${obraAutor}` : "(Nenhuma obra lida)"}
+            {obraId
+              ? `Nº Tombo: ${obraId} | Título: ${obraNome} | Autoria: ${obraAutor}`
+              : "(Nenhuma obra lida)"}
             {obraId && (
               <span
                 className="clear-btn"
@@ -182,9 +136,10 @@ export default function Movimentacao() {
             )}
           </p>
         </div>
-
         {!obraId && (
-          <button onClick={() => setLerObra(true)}>Escanear QR da Obra</button>
+          <button onClick={() => setLerObra(true)}>
+            Escanear QR da Obra
+          </button>
         )}
         {lerObra && (
           <div className="overlay">
@@ -199,12 +154,14 @@ export default function Movimentacao() {
         )}
       </div>
 
-      {/* ---------- QR CODE LOCAL ---------- */}
-      <div style={{ marginTop: 20 }}>
-        <label style={{ display: "block", textAlign: "left" }}>Local selecionado:</label>
+      {/* --- Local selecionado --- */}
+      <div style={{ marginTop: 20, textAlign: "left" }}>
+        <label>Local selecionado:</label>
         <div style={{ position: "relative" }}>
           <p>
-            {localId ? `ID: ${localId} | ${localNome}` : "(Nenhum local lido)"}
+            {localId
+              ? `ID: ${localId} | ${localNome}`
+              : "(Nenhum local lido)"}
             {localId && (
               <span
                 className="clear-btn"
@@ -219,9 +176,10 @@ export default function Movimentacao() {
             )}
           </p>
         </div>
-
         {!localId && (
-          <button onClick={() => setLerLocal(true)}>Escanear QR do Local</button>
+          <button onClick={() => setLerLocal(true)}>
+            Escanear QR do Local
+          </button>
         )}
         {lerLocal && (
           <div className="overlay">
@@ -236,12 +194,9 @@ export default function Movimentacao() {
         )}
       </div>
 
-
-      {/* ---------- TIPO MOVIMENTAÇÃO ---------- */}
+      {/* --- Tipo de movimentação --- */}
       <div className="select-container" style={{ marginTop: 20 }}>
-        <label style={{ display: "block", textAlign: "left" }}>
-          Tipo de Movimentação:
-        </label>
+        <label>Tipo de Movimentação:</label>
         <select
           id="tipoMovimentacao"
           value={tipoSelecionado}
@@ -256,7 +211,7 @@ export default function Movimentacao() {
         </select>
       </div>
 
-      {/* ---------- BOTÃO REGISTRAR ---------- */}
+      {/* --- Botão Registrar --- */}
       <button onClick={handleRegistrar} style={{ marginTop: 20 }}>
         Registrar
       </button>
