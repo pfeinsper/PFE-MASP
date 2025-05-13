@@ -1,21 +1,22 @@
 /* Navbar.css */
 
-/* container principal */
 .navbar {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem;
+  /* usa safe-area nas pontas */
+  padding: 0.5rem env(safe-area-inset-right, 1rem)
+           0.5rem env(safe-area-inset-left, 1rem);
   background: #fff;
   z-index: 1001;
 }
 
-/* logo e hamburguer */
 .logo {
   height: 2.5rem;
 }
 
+/* icone de menu permanece do mesmo jeito */
 .hamburguer {
   font-size: 1.8rem;
   cursor: pointer;
@@ -37,12 +38,10 @@
   z-index: 1000;
 }
 
-/* menu aberto */
 .menu-right.open {
   transform: translateX(0);
 }
 
-/* conteúdo interno */
 .menu-content {
   position: relative;
   padding: 2rem 1rem;
@@ -51,7 +50,6 @@
   gap: 1.5rem;
 }
 
-/* botão de fechar (×) */
 .close-btn {
   position: absolute;
   top: 1rem;
@@ -60,7 +58,6 @@
   cursor: pointer;
 }
 
-/* links do menu */
 .menu-content a {
   text-decoration: none;
   font-size: 1.1rem;
@@ -68,7 +65,6 @@
   padding: 0.5rem 0;
 }
 
-/* responsividade extra para telas muito pequenas */
 @media (max-width: 480px) {
   .menu-right {
     width: 100%;

@@ -7,24 +7,24 @@ export default function LerQR({ onScanResult, onClose }) {
   const scannerContainerId = "reader";
 
   useEffect(() => {
+    const readerElem = document.getElementById(scannerContainerId);
+    // calcula 70% do menor lado do container
+    const w = readerElem.clientWidth;
+    const h = readerElem.clientHeight;
+    const boxSize = Math.round(Math.min(w, h) * 0.7);
+
     const scanner = new Html5Qrcode(scannerContainerId);
     scannerRef.current = scanner;
 
-    // limpa container
-    const readerElem = document.getElementById(scannerContainerId);
-    if (readerElem) readerElem.innerHTML = "";
+    // limpa qualquer coisa
+    readerElem.innerHTML = "";
 
     scanner
       .start(
         { facingMode: "environment" },
         {
           fps: 10,
-          /* qrbox dinâmico: 70% do menor lado do viewfinder */
-          qrbox: (viewfinderWidth, viewfinderHeight) => {
-            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const boxSize = Math.round(minEdge * 0.7);
-            return { width: boxSize, height: boxSize };
-          },
+          qrbox: { width: boxSize, height: boxSize },
           aspectRatio: 4 / 3,
         },
         (decodedText) => {
@@ -35,7 +35,7 @@ export default function LerQR({ onScanResult, onClose }) {
             .finally(() => onScanResult(decodedText));
         },
         (err) => {
-          /* falha ao ler frame — ignorar */
+          /* ignorar falhas de frame */
         }
       )
       .catch((err) => {

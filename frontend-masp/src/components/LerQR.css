@@ -1,15 +1,15 @@
+/* LerQR.css */
+
 #reader {
   width: 100%;
   max-width: 360px;
-  /* usa aspect-ratio em vez de height fixa */
   aspect-ratio: 4 / 3;
   overflow: hidden;
   margin: 0 auto;
   border-radius: 10px;
-  background: #000; /* enquanto a câmera não inicia */
+  background: #000;
 }
 
-/* centraliza e dá estilo simples no botão */
 .lerqr-container {
   text-align: center;
   padding: 10px 0;
