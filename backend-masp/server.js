@@ -1,24 +1,28 @@
 require("dotenv").config();
-process.env.TZ = "America/Sao_Paulo"; 
+process.env.TZ = "America/Sao_Paulo";
+
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { DateTime } = require("luxon"); 
+const { DateTime } = require("luxon");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Configuração do PostgreSQL via .env
 const isProduction = process.env.NODE_ENV === "production";
 
+// const pool = new Pool({
+//   user: process.env.DB_USER,
+//   host: process.env.DB_HOST,
+//   database: process.env.DB_NAME,
+//   password: process.env.DB_PASSWORD,
+//   port: process.env.DB_PORT,
+//   ssl: isProduction ? { rejectUnauthorized: false } : false,
+// });
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL,
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
@@ -27,7 +31,7 @@ const pool = new Pool({
   const client = await pool.connect();
   try {
     await client.query(`SET TIME ZONE 'America/Sao_Paulo';`);
-    console.log("Timezone do Postgre ajustado para America/Sao_Paulo");
+    console.log("Timezone do PostgreSQL ajustado para America/Sao_Paulo");
   } finally {
     client.release();
   }
