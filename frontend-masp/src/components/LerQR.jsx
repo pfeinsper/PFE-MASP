@@ -1,38 +1,38 @@
 // src/components/LerQR.jsx
 import React, { useEffect, useRef } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
-import "./LerQR.css";
 
 export default function LerQR({ onScanResult, onClose }) {
   const scannerRef = useRef(null);
   const scannerContainerId = "reader";
-  const BOX_SIZE = 300; // tamanho fixo do quadrado em pixels
 
   useEffect(() => {
     const scanner = new Html5Qrcode(scannerContainerId);
     scannerRef.current = scanner;
 
-    // limpa container antes de iniciar
     const readerElem = document.getElementById(scannerContainerId);
-    if (readerElem) readerElem.innerHTML = "";
+    if (readerElem) {
+      readerElem.innerHTML = "";
+    }
 
     scanner
       .start(
-        // ⚠️ aqui mudamos para string ou { exact: ... }
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: BOX_SIZE, height: BOX_SIZE },
-          aspectRatio: 1, // força proporção 1:1
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.333,
         },
         (decodedText) => {
           console.log("✅ QR detectado:", decodedText);
           scanner
             .stop()
             .catch(() => {})
-            .finally(() => onScanResult(decodedText));
+            .finally(() => {
+              onScanResult(decodedText);
+            });
         },
-        (errorMessage) => { /* ignora erros de leitura de frame */ }
+        (err) => {}
       )
       .catch((err) => {
         console.error("Erro ao iniciar câmera:", err);
@@ -52,9 +52,28 @@ export default function LerQR({ onScanResult, onClose }) {
   }, [onScanResult]);
 
   return (
-    <div className="lerqr-container">
-      <div id={scannerContainerId} />
+    <div style={{ textAlign: "center" }}>
+      <div
+        id={scannerContainerId}
+        style={{
+          width: "100%",
+          maxWidth: "360px",
+          height: "270px", // <- 👈 altura fixa realista (4:3)
+          overflow: "hidden", // <- 👈 impede a duplicação da imagem
+          margin: "0 auto",
+          borderRadius: "10px",
+        }}
+      />
       <button
+        style={{
+          marginTop: "20px",
+          backgroundColor: "#d50000",
+          color: "#fff",
+          padding: "10px 20px",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
         onClick={() => {
           if (scannerRef.current) {
             const state = scannerRef.current.getState();
