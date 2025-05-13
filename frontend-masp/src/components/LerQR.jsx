@@ -20,7 +20,7 @@ export default function LerQR({ onScanResult, onClose }) {
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 150, height: 150 },
           aspectRatio: 1.0, // ✅ quadrado
         },
         (decodedText) => {
