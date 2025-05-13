@@ -1,6 +1,6 @@
-// src/components/LerQR.jsx
 import React, { useEffect, useRef } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
+import "./LerQR.css";
 
 export default function LerQR({ onScanResult, onClose }) {
   const scannerRef = useRef(null);
@@ -10,29 +10,33 @@ export default function LerQR({ onScanResult, onClose }) {
     const scanner = new Html5Qrcode(scannerContainerId);
     scannerRef.current = scanner;
 
+    // limpa container
     const readerElem = document.getElementById(scannerContainerId);
-    if (readerElem) {
-      readerElem.innerHTML = "";
-    }
+    if (readerElem) readerElem.innerHTML = "";
 
     scanner
       .start(
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.333,
+          /* qrbox dinâmico: 70% do menor lado do viewfinder */
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const boxSize = Math.round(minEdge * 0.7);
+            return { width: boxSize, height: boxSize };
+          },
+          aspectRatio: 4 / 3,
         },
         (decodedText) => {
           console.log("✅ QR detectado:", decodedText);
           scanner
             .stop()
             .catch(() => {})
-            .finally(() => {
-              onScanResult(decodedText);
-            });
+            .finally(() => onScanResult(decodedText));
         },
-        (err) => {}
+        (err) => {
+          /* falha ao ler frame — ignorar */
+        }
       )
       .catch((err) => {
         console.error("Erro ao iniciar câmera:", err);
@@ -52,28 +56,9 @@ export default function LerQR({ onScanResult, onClose }) {
   }, [onScanResult]);
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        id={scannerContainerId}
-        style={{
-          width: "100%",
-          maxWidth: "360px",
-          height: "270px", // <- 👈 altura fixa realista (4:3)
-          overflow: "hidden", // <- 👈 impede a duplicação da imagem
-          margin: "0 auto",
-          borderRadius: "10px",
-        }}
-      />
+    <div className="lerqr-container">
+      <div id={scannerContainerId} />
       <button
-        style={{
-          marginTop: "20px",
-          backgroundColor: "#d50000",
-          color: "#fff",
-          padding: "10px 20px",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
         onClick={() => {
           if (scannerRef.current) {
             const state = scannerRef.current.getState();
