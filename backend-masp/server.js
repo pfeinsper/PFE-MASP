@@ -1,52 +1,62 @@
-// server.js
 require("dotenv").config();
+process.env.TZ = "America/Sao_Paulo"; 
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { DateTime } = require("luxon"); 
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 // Configuração do PostgreSQL via .env
+const isProduction = process.env.NODE_ENV === "production";
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  ssl: {
-    rejectUnauthorized: false, // Render exige SSL, mas não exige certificado verificado
-  },
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
+
+// ─── força o timezone do pool para São Paulo ─────────────────────────
+(async () => {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET TIME ZONE 'America/Sao_Paulo';`);
+    console.log("Timezone do Postgre ajustado para America/Sao_Paulo");
+  } finally {
+    client.release();
+  }
+})();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
-/* ---------------------- 🔐 Middleware de autenticação ---------------------- */
+// Middleware de autenticação
 function autenticarToken(req, res, next) {
-  const authHeader = req.headers.authorization;         // "Bearer <token>"
+  const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
   if (!token) return res.sendStatus(401);
 
   jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
     if (err) return res.sendStatus(403);
-    req.usuario = usuario;       // { id, nome }
+    req.usuario = usuario;
     console.log("Usuário autenticado:", usuario.nome);
     next();
   });
 }
 
-// ---------------------------------------------------------
 // Rota de teste
 app.get("/", (req, res) => {
   res.send("API do MASP está rodando!");
 });
 
-// ---------------------------------------------------------
-// 4.1. Listar todas as obras
+// Listar obras
 app.get("/obras", async (req, res) => {
   try {
     const { search } = req.query;
@@ -66,8 +76,7 @@ app.get("/obras", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.1.B. Buscar obra via QR/código
+// Buscar obra por código
 app.get("/obras/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
@@ -85,8 +94,7 @@ app.get("/obras/codigo/:codigo", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.2. Listar todos os locais
+// Listar locais
 app.get("/locais", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM locais");
@@ -97,8 +105,7 @@ app.get("/locais", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.2.B. Buscar local via QR/código
+// Buscar local por código
 app.get("/locais/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
@@ -116,8 +123,7 @@ app.get("/locais/codigo/:codigo", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.3. Listar todas as movimentações
+// Listar movimentações
 app.get("/movimentacoes", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -132,14 +138,12 @@ app.get("/movimentacoes", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.4. Adicionar uma nova movimentação (protegida)
+// Adicionar movimentação
 app.post("/movimentacoes", autenticarToken, async (req, res) => {
   try {
     const { obra_id, local_id, tipo_movimentacao } = req.body;
     const usuario_id = req.usuario.id;
 
-    // Validações básicas
     if (!obra_id || !local_id) {
       return res.status(400).json({ error: "Obra e local são obrigatórios." });
     }
@@ -147,22 +151,28 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
       return res.status(400).json({ error: "Tipo de movimentação é obrigatório." });
     }
 
-    // Inserção com subconsultas para nomes
+    // ✅ Data correta com fuso de São Paulo
+    const dataMovimentacao = DateTime.now()
+      .setZone("America/Sao_Paulo")
+      .toISO(); // ex: "2025-05-13T15:15:00.000-03:00"
+
     const query = `
       INSERT INTO movimentacoes
-        (obra_id, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao)
+        (obra_id, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao)
       VALUES (
         $1::varchar,
         $2::integer,
         (SELECT titulo FROM obras WHERE id = $1::varchar),
-        (SELECT nome   FROM locais WHERE id = $2::integer),
+        (SELECT nome FROM locais WHERE id = $2::integer),
         $3::integer,
-        (SELECT nome   FROM usuarios WHERE id = $3::integer),
-        $4::varchar
+        (SELECT nome FROM usuarios WHERE id = $3::integer),
+        $4::varchar,
+        $5::timestamptz
       )
       RETURNING *;
     `;
-    const values = [obra_id, local_id, usuario_id, tipo_movimentacao];
+
+    const values = [obra_id, local_id, usuario_id, tipo_movimentacao, dataMovimentacao];
     const result = await pool.query(query, values);
 
     res.status(201).json(result.rows[0]);
@@ -172,14 +182,7 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.5. Iniciar o servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
-
-// ---------------------------------------------------------
-// 4.6. Listar todos os usuários
+// Listar usuários
 app.get("/usuarios", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM usuarios ORDER BY nome");
@@ -190,8 +193,7 @@ app.get("/usuarios", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 4.7. Histórico de movimentações de uma obra
+// Histórico de movimentações de uma obra
 app.get("/movimentacoes/obra/:obra_id", async (req, res) => {
   try {
     const { obra_id } = req.params;
@@ -213,8 +215,7 @@ app.get("/movimentacoes/obra/:obra_id", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
-// 5.1 Login de usuários com verificação de senha e JWT
+// Login com JWT
 app.post("/login", async (req, res) => {
   const { nome, senha } = req.body;
   if (!nome || !senha) {
@@ -222,10 +223,7 @@ app.post("/login", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      "SELECT * FROM usuarios WHERE nome = $1",
-      [nome]
-    );
+    const result = await pool.query("SELECT * FROM usuarios WHERE nome = $1", [nome]);
     const user = result.rows[0];
     if (!user || senha !== user.senha) {
       return res.status(401).json({ error: "Usuário ou senha inválidos" });
@@ -241,4 +239,9 @@ app.post("/login", async (req, res) => {
     console.error("Erro no login:", error);
     res.status(500).send("Erro no servidor");
   }
+});
+
+// Iniciar servidor
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });

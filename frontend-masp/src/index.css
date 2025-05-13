@@ -116,12 +116,20 @@ button:hover {
   background: #f9f9f9;
 }
 
-/* Mensagem de sucesso/erro */
 .mensagem {
-  color: green;
-  font-size: 17x;
+  font-size: 17px;
   margin-top: 10px;
   font-weight: 500;
+}
+
+/* Sucesso em verde */
+.mensagem.success {
+  color: green;
+}
+
+/* Erro em vermelho */
+.mensagem.error {
+  color: red;
 }
 
 /* Botão "X" para limpar */
