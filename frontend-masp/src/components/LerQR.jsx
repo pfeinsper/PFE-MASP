@@ -15,25 +15,25 @@ export default function LerQR({ onScanResult, onClose }) {
       readerElem.innerHTML = "";
     }
 
-    scanner
-      .start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.333,
-        },
-        (decodedText) => {
-          console.log("✅ QR detectado:", decodedText);
-          scanner
-            .stop()
-            .catch(() => {})
-            .finally(() => {
-              onScanResult(decodedText);
-            });
-        },
-        (err) => {}
-      )
+    scanner.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: 180,
+        aspectRatio: 1.333,
+      },
+      (decodedText) => {
+        console.log("✅ QR detectado:", decodedText);
+        scanner
+          .stop()
+          .catch(() => {})
+          .finally(() => {
+            onScanResult(decodedText);
+          });
+      },
+      (err) => {}
+    )
+
       .catch((err) => {
         console.error("Erro ao iniciar câmera:", err);
       });
