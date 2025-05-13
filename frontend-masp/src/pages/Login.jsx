@@ -13,7 +13,7 @@ export default function Login() {
     try {
       const res = await api.post("/login", { nome, senha });
       localStorage.setItem("token", res.data.token);
-      navigate("/buscar");
+      navigate("/movimentacao");
     } catch (err) {
       console.error("Erro no login:", err);
       setErro("Nome ou senha inválidos.");
