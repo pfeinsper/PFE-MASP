@@ -1,6 +1,6 @@
+// src/components/LerQR.jsx
 import React, { useEffect, useRef } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
-import "./LerQR.css"; // ✅ Certifique-se de importar o CSS
 
 export default function LerQR({ onScanResult, onClose }) {
   const scannerRef = useRef(null);
@@ -21,7 +21,7 @@ export default function LerQR({ onScanResult, onClose }) {
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0, // ✅ quadrado
+          aspectRatio: 1.333,
         },
         (decodedText) => {
           console.log("✅ QR detectado:", decodedText);
@@ -52,11 +52,29 @@ export default function LerQR({ onScanResult, onClose }) {
   }, [onScanResult]);
 
   return (
-    <div className="lerqr-container">
-      {/* ⚠️ Sem inline style de height! */}
-      <div id={scannerContainerId}></div>
-
+    <div style={{ textAlign: "center" }}>
+      <div
+        id={scannerContainerId}
+        style={{
+          width: "80vw",            // usa largura da tela no mobile
+          maxWidth: "360px",
+          aspectRatio: "1 / 1",     // força quadrado
+          overflow: "hidden",
+          margin: "0 auto",
+          borderRadius: "10px",
+          backgroundColor: "#000",  // evita tela piscando fora do quadrado
+        }}
+      />
       <button
+        style={{
+          marginTop: "20px",
+          backgroundColor: "#d50000",
+          color: "#fff",
+          padding: "10px 20px",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
         onClick={() => {
           if (scannerRef.current) {
             const state = scannerRef.current.getState();
