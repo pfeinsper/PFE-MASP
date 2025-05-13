@@ -1,25 +1,36 @@
 /* LerQR.css */
-
 #reader {
-  width: 100%;
-  max-width: 360px;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
+  width: 90vw;         /* 90% da largura da tela */
+  max-width: 360px;    /* mas não ultrapassa 360px */
+  position: relative;  /* para posicionar o vídeo internamente */
   margin: 0 auto;
+  overflow: hidden;
   border-radius: 10px;
-  background: #000;
+  background: #000;    /* enquanto a câmera não inicializa */
+}
+/* truque para forçar altura == largura */
+#reader::before {
+  content: "";
+  display: block;
+  padding-bottom: 100%;
+}
+/* todo elemento interno (vídeo/canvas) ocupa 100% */
+#reader > * {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .lerqr-container {
   text-align: center;
-  padding: 10px 0;
+  padding: 1rem 0;
 }
-
 .lerqr-container button {
-  margin-top: 20px;
+  margin-top: 1rem;
   background-color: #d50000;
   color: #fff;
-  padding: 10px 20px;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;

@@ -1,3 +1,4 @@
+// src/components/LerQR.jsx
 import React, { useEffect, useRef } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 import "./LerQR.css";
@@ -5,27 +6,24 @@ import "./LerQR.css";
 export default function LerQR({ onScanResult, onClose }) {
   const scannerRef = useRef(null);
   const scannerContainerId = "reader";
+  const BOX_SIZE = 300; // tamanho fixo do quadrado em pixels
 
   useEffect(() => {
-    const readerElem = document.getElementById(scannerContainerId);
-    // calcula 70% do menor lado do container
-    const w = readerElem.clientWidth;
-    const h = readerElem.clientHeight;
-    const boxSize = Math.round(Math.min(w, h) * 0.7);
-
     const scanner = new Html5Qrcode(scannerContainerId);
     scannerRef.current = scanner;
 
-    // limpa qualquer coisa
-    readerElem.innerHTML = "";
+    // limpa container antes de iniciar
+    const readerElem = document.getElementById(scannerContainerId);
+    if (readerElem) readerElem.innerHTML = "";
 
     scanner
       .start(
+        // ⚠️ aqui mudamos para string ou { exact: ... }
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: boxSize, height: boxSize },
-          aspectRatio: 4 / 3,
+          qrbox: { width: BOX_SIZE, height: BOX_SIZE },
+          aspectRatio: 1, // força proporção 1:1
         },
         (decodedText) => {
           console.log("✅ QR detectado:", decodedText);
@@ -34,9 +32,7 @@ export default function LerQR({ onScanResult, onClose }) {
             .catch(() => {})
             .finally(() => onScanResult(decodedText));
         },
-        (err) => {
-          /* ignorar falhas de frame */
-        }
+        (errorMessage) => { /* ignora erros de leitura de frame */ }
       )
       .catch((err) => {
         console.error("Erro ao iniciar câmera:", err);
