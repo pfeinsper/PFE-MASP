@@ -100,13 +100,13 @@ export default function Search() {
           <h2 style={{ color: "#d50000" }}>{obra.titulo}</h2>
           <p><em style={{ color: "orangered" }}>ID: {obra.id}</em></p>
           <p>
-            <strong style={{ color: "orangered" }}>Autoria:</strong>{" "}
-            <em style={{ color: "orangered" }}>{obra.autoria || "Desconhecida"}</em>
+            <strong>Autoria:</strong>{" "}
+            <em >{obra.autoria || "Desconhecida"}</em>
           </p>
 
           <h3 style={{ marginTop: 30 }}>Últimas movimentações:</h3>
           {movimentacoes.length === 0 ? (
-            <p style={{ fontStyle: "italic", color: "orangered" }}>
+            <p >
               (Nenhuma movimentação encontrada)
             </p>
           ) : (
