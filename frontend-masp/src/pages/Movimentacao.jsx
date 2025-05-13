@@ -5,29 +5,20 @@ import LerQR from "../components/LerQR";
 import "../index.css";
 
 export default function Movimentacao() {
-  // Estado do usuário logado
   const [usuarioNome, setUsuarioNome] = useState("");
   const [usuarioId, setUsuarioId] = useState(null);
 
-  // Estados de obra
-  const [obraId, setObraId] = useState(null);
-  const [obraNome, setObraNome] = useState("");
-  const [obraAutor, setObraAutor] = useState("");
-
-  // Estados de local
+  const [obras, setObras] = useState([]); // array de obras
   const [localId, setLocalId] = useState(null);
   const [localNome, setLocalNome] = useState("");
 
-  // Tipo de movimentação e mensagens
   const [tipoSelecionado, setTipoSelecionado] = useState("");
   const [mensagem, setMensagem] = useState("");
-  const [tipoMensagem, setTipoMensagem] = useState(""); // "success" ou "error"
+  const [tipoMensagem, setTipoMensagem] = useState("");
 
-  // Flags de scanner
   const [lerObra, setLerObra] = useState(false);
   const [lerLocal, setLerLocal] = useState(false);
 
-  // Limpa a mensagem após 5 segundos
   useEffect(() => {
     if (!mensagem) return;
     const id = setTimeout(() => {
@@ -37,7 +28,6 @@ export default function Movimentacao() {
     return () => clearTimeout(id);
   }, [mensagem]);
 
-  // Ao montar: decodifica o token para pegar id e nome do usuário
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -52,22 +42,24 @@ export default function Movimentacao() {
     }
   }, []);
 
-  // Quando escaneia QR da obra
   const handleScanObra = async (codigo) => {
     setLerObra(false);
     try {
       const res = await api.get(`/obras/codigo/${codigo}`);
-      const obra = res.data;
-      setObraId(obra.id);
-      setObraNome(obra.titulo || "");
-      setObraAutor(obra.autoria || "");
+      const nova = res.data;
+      const jaExiste = obras.some((o) => o.id === nova.id);
+      if (jaExiste) {
+        setMensagem("Essa obra já foi escaneada.");
+        setTipoMensagem("error");
+        return;
+      }
+      setObras([...obras, nova]);
     } catch {
       setMensagem("Obra não encontrada ou erro no servidor.");
       setTipoMensagem("error");
     }
   };
 
-  // Quando escaneia QR do local
   const handleScanLocal = async (codigo) => {
     setLerLocal(false);
     try {
@@ -80,10 +72,15 @@ export default function Movimentacao() {
     }
   };
 
-  // Ao clicar em Registrar
+  const handleRemoverObra = (index) => {
+    const novas = [...obras];
+    novas.splice(index, 1);
+    setObras(novas);
+  };
+
   const handleRegistrar = async () => {
-    if (!obraId || !localId) {
-      setMensagem("Escaneie a obra e o local primeiro!");
+    if (obras.length === 0 || !localId) {
+      setMensagem("Escaneie pelo menos uma obra e um local!");
       setTipoMensagem("error");
       return;
     }
@@ -93,24 +90,23 @@ export default function Movimentacao() {
       return;
     }
     if (!tipoSelecionado) {
-      setMensagem("Selecione o tipo de movimentação (Entrada ou Saída)!");
+      setMensagem("Selecione o tipo de movimentação!");
       setTipoMensagem("error");
       return;
     }
 
     try {
-      await registrarMovimentacao(obraId, localId, tipoSelecionado);
-      setMensagem("Movimentação registrada com sucesso!");
+      for (const obra of obras) {
+        await registrarMovimentacao(obra.id, localId, tipoSelecionado);
+      }
+      setMensagem("Movimentações registradas com sucesso!");
       setTipoMensagem("success");
-      // limpa campos
-      setObraId(null);
-      setObraNome("");
-      setObraAutor("");
+      setObras([]);
       setLocalId(null);
       setLocalNome("");
       setTipoSelecionado("");
     } catch {
-      setMensagem("Erro ao registrar movimentação.");
+      setMensagem("Erro ao registrar movimentações.");
       setTipoMensagem("error");
     }
   };
@@ -119,38 +115,35 @@ export default function Movimentacao() {
     <div className="container">
       <h1>Movimentação de Obras</h1>
 
-      {/* Usuário logado */}
       <div style={{ marginTop: 20, textAlign: "left" }}>
         <label>Usuário</label>
-        <p style={{ fontWeight: "bold", fontSize: "16px", color: "orangered" }}>
-          {usuarioNome || "(não autenticado)"}
-        </p>
+        <p style={{ fontStyle: "italic", color: "orangered" }}>{usuarioNome || "(não autenticado)"}</p>
       </div>
 
-      {/* Obra selecionada */}
+      {/* Obras escaneadas */}
       <div style={{ marginTop: 20, textAlign: "left" }}>
-        <label>Obra selecionada:</label>
-        <div style={{ position: "relative" }}>
-          <p>
-            {obraId
-              ? `Nº Tombo: ${obraId} | Título: ${obraNome} | Autoria: ${obraAutor}`
-              : "(Nenhuma obra lida)"}
-            {obraId && (
-              <span
-                className="clear-btn"
-                style={{ right: "-6px", top: "5px" }}
-                onClick={() => {
-                  setObraId(null);
-                  setObraNome("");
-                  setObraAutor("");
-                }}
-              >
-                ×
-              </span>
-            )}
-          </p>
-        </div>
-        {!obraId && <button onClick={() => setLerObra(true)}>Escanear QR da Obra</button>}
+        <label>Obras escaneadas:</label>
+        {obras.length > 0 ? (
+          <ul style={{ paddingLeft: 20 }}>
+            {obras.map((obra, index) => (
+              <li key={index} style={{ marginBottom: "10px", position: "relative", fontStyle: "italic", color: "orangered" }}>
+                Nº Tombo: {obra.id} | {obra.titulo} | {obra.autoria || "Desconhecido"}
+                <span
+                  className="clear-btn"
+                  onClick={() => handleRemoverObra(index)}
+                >
+                  ×
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          // <p style={{ fontStyle: "italic", color: "gray" }}>(Nenhuma obra lida)</p>
+          <p>(Nenhuma obra lida)</p>
+        )}
+        <button onClick={() => setLerObra(true)} style={{ marginTop: 10 }}>
+          Escanear QR da Obra
+        </button>
         {lerObra && (
           <div className="overlay">
             <div className="qr-container">
@@ -160,26 +153,13 @@ export default function Movimentacao() {
         )}
       </div>
 
-      {/* Local selecionado */}
+      {/* Local */}
       <div style={{ marginTop: 20, textAlign: "left" }}>
         <label>Local selecionado:</label>
-        <div style={{ position: "relative" }}>
-          <p>
-            {localId ? `ID: ${localId} | ${localNome}` : "(Nenhum local lido)"}
-            {localId && (
-              <span
-                className="clear-btn"
-                style={{ right: "-5px", top: "5px" }}
-                onClick={() => {
-                  setLocalId(null);
-                  setLocalNome("");
-                }}
-              >
-                ×
-              </span>
-            )}
-          </p>
-        </div>
+        {/* <p style={{ fontStyle: "italic", color: localId ? "orangered" : "gray" }}> */}
+        <p>
+          {localId ? <><em>ID: {localId}</em> | {localNome}</> : "(Nenhum local lido)"}
+        </p>
         {!localId && <button onClick={() => setLerLocal(true)}>Escanear QR do Local</button>}
         {lerLocal && (
           <div className="overlay">
@@ -190,7 +170,6 @@ export default function Movimentacao() {
         )}
       </div>
 
-      {/* Tipo de movimentação */}
       <div className="select-container" style={{ marginTop: 20 }}>
         <label>Tipo de Movimentação:</label>
         <select
@@ -207,15 +186,11 @@ export default function Movimentacao() {
         </select>
       </div>
 
-      {/* Botão Registrar */}
       <button onClick={handleRegistrar} style={{ marginTop: 20 }}>
         Registrar
       </button>
 
-      {/* Mensagem de feedback */}
-      {mensagem && (
-        <p className={`mensagem ${tipoMensagem}`}>{mensagem}</p>
-      )}
+      {mensagem && <p className={`mensagem ${tipoMensagem}`}>{mensagem}</p>}
     </div>
   );
 }

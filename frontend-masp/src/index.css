@@ -140,7 +140,7 @@ button:hover {
   transform: translateY(-50%);
   cursor: pointer;
   font-size: 20px;
-  color: #aaa;
+  color: black;
   transition: color 0.2s;
 }
 .clear-btn:hover {
