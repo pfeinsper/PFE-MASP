@@ -1,0 +1,38 @@
+#reader {
+  width: 90vw;
+  max-width: 360px;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #000;
+}
+
+#reader::before {
+  content: "";
+  display: block;
+  padding-bottom: 100%; /* garante proporção quadrada */
+}
+
+#reader > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lerqr-container {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.lerqr-container button {
+  margin-top: 1rem;
+  background-color: #d50000;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
