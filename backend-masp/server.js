@@ -126,17 +126,94 @@ app.get("/locais/codigo/:codigo", async (req, res) => {
 // Listar movimentações
 app.get("/movimentacoes", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT *
+    const { data_inicio, data_fim, usuario_nome, local_nome, obra_id, local_id, tipo_movimentacao, search } = req.query;
+
+    let query = `
+      SELECT 
+        id, obra_id, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao
       FROM movimentacoes
-      ORDER BY data_movimentacao DESC
-    `);
+      WHERE 1=1
+    `;
+    const values = [];
+    let paramIndex = 1;
+
+    // Filtros para data_inicio
+    if (data_inicio) {
+      query += ` AND data_movimentacao >= $${paramIndex}`;
+      values.push(data_inicio);
+      paramIndex++;
+    }
+
+    // Filtros para data_fim
+    if (data_fim) {
+      query += ` AND data_movimentacao <= $${paramIndex}`;
+      values.push(data_fim);
+      paramIndex++;
+    }
+
+    // Filtros para usuario_nome
+    if (usuario_nome) {
+      query += ` AND usuario_nome ILIKE $${paramIndex}`;
+      values.push(`%${usuario_nome}%`);
+      paramIndex++;
+    }
+
+    // Filtros para local_nome
+    if (local_nome) {
+      query += ` AND local_nome ILIKE $${paramIndex}`;
+      values.push(`%${local_nome}%`);
+      paramIndex++;
+    }
+
+    // Filtros para obra_id
+    if (obra_id) {
+      query += ` AND obra_id = $${paramIndex}`;
+      values.push(obra_id);
+      paramIndex++;
+    }
+
+    // Filtros para local_id
+    if (local_id) {
+      query += ` AND local_id = $${paramIndex}`;
+      values.push(local_id);
+      paramIndex++;
+    }
+
+    // Filtros para tipo_movimentacao
+    if (tipo_movimentacao) {
+      query += ` AND tipo_movimentacao = $${paramIndex}`;
+      values.push(tipo_movimentacao);
+      paramIndex++;
+    }
+
+    if (search) {
+      query += ` AND (obra_nome ILIKE $${paramIndex} OR local_nome ILIKE $${paramIndex} OR usuario_nome ILIKE $${paramIndex})`;
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+
+
+    // Organizando os resultados pela data de movimentação
+    query += " ORDER BY data_movimentacao DESC";
+
+    // Log para depuração
+    console.log("Query recebida:", req.query); // Parâmetros da URL
+    console.log("Query SQL gerada:", query);  // Sua query final
+    console.log("Valores dos parâmetros:", values); // Valores usados na query
+    console.log("Query params recebidos:", req.query);
+    console.log("Query SQL gerada:", query);
+    console.log("Valores dos parâmetros:", values);
+
+    // Executando a consulta no banco de dados
+    const result = await pool.query(query, values);
+
     res.json(result.rows);
   } catch (error) {
     console.error("Erro ao buscar movimentações:", error);
     res.status(500).send("Erro no servidor");
   }
 });
+
 
 // Adicionar movimentação
 app.post("/movimentacoes", autenticarToken, async (req, res) => {

@@ -35,6 +35,7 @@ export default function Navbar() {
           <Link to="/movimentacao" onClick={toggleMenu}>Movimentação</Link>
           <Link to="/buscar" onClick={toggleMenu}>Buscar Obra</Link>
           <Link to="/gerar-qr" onClick={toggleMenu}>Gerar QR Code</Link>
+          <Link to="/consulta" onClick={toggleMenu}>Consulta de Movimentações</Link>
         </div>
       </div>
     </>
