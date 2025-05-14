@@ -216,6 +216,8 @@ export default function Consulta() {
                 <div>
                   <strong>Usuário:</strong> {mov.usuario_nome}
                   <br />
+                  <strong>Nome da Obra:</strong> {mov.obra_nome} {/* Nome da obra adicionado */}
+                  <br />
                   <strong>Local:</strong> {mov.local_nome}
                 </div>
               </li>
