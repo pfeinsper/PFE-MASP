@@ -12,6 +12,7 @@ export default function CriarQRCode() {
   const [nome, setNome] = useState("");
   const [textoQR, setTextoQR] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const [progresso, setProgresso] = useState(0);
 
   const [loteTexto, setLoteTexto] = useState("");
   const [loteCsvCódigos, setLoteCsvCódigos] = useState([]);
@@ -35,7 +36,6 @@ export default function CriarQRCode() {
       }
     }
   };
-
 
   const desenharQRCodeComTexto = async (codigoTexto) => {
     const url = await QRCode.toDataURL(codigoTexto);
@@ -78,10 +78,8 @@ export default function CriarQRCode() {
 
     try {
       const { nome: nomeEncontrado, textoQR: textoParaQR } = await buscarNome(codigo.trim());
-
       setNome(nomeEncontrado);
       setTextoQR(textoParaQR);
-
       const url = await desenharQRCodeComTexto(textoParaQR);
       setQrDataUrl(url);
     } catch (err) {
@@ -89,31 +87,30 @@ export default function CriarQRCode() {
     }
   };
 
-
   const handleDownload = () => {
     if (!qrDataUrl || !textoQR) return;
     const a = document.createElement("a");
     a.href = qrDataUrl;
-    a.download = `qrcode_${textoQR}.png`;
+    a.download = `${textoQR.replace(/\//g, "__")}.png`;
     a.click();
   };
 
-  const handleProcessarTextoLote = async () => {
-    const codigos = loteTexto
-      .split(/[\n,\s]+/)
-      .map((x) => x.trim())
-      .filter((x) => x);
-
-    if (codigos.length === 0) {
-      setMensagem("Nenhum código válido informado.");
-      return;
-    }
-
+  const gerarLote = async (codigos) => {
+    setQrCodeZip(null);
+    setProgresso(0);
     try {
       const zip = new JSZip();
-      for (const cod of codigos) {
-        const qr = await desenharQRCodeComTexto(cod);
-        zip.file(`qrcode_${cod}.png`, qr.split(",")[1], { base64: true });
+      for (let i = 0; i < codigos.length; i++) {
+        const cod = codigos[i];
+        try {
+          const { textoQR } = await buscarNome(cod);
+          const qr = await desenharQRCodeComTexto(textoQR);
+          const nomeArquivo = textoQR.replace(/\//g, "__");
+          zip.file(`${nomeArquivo}.png`, qr.split(",")[1], { base64: true });
+        } catch (err) {
+          console.error(`Erro ao processar ${cod}:`, err);
+        }
+        setProgresso(Math.round(((i + 1) / codigos.length) * 100));
       }
       const blob = await zip.generateAsync({ type: "blob" });
       setQrCodeZip(blob);
@@ -123,10 +120,23 @@ export default function CriarQRCode() {
     }
   };
 
+  const handleProcessarTextoLote = async () => {
+    const codigos = loteTexto
+      .split(/[\n,\s]+/)
+      .map((x) => x.trim())
+      .filter((x) => x);
+    if (codigos.length === 0) {
+      setMensagem("Nenhum código válido informado.");
+      return;
+    }
+    await gerarLote(codigos);
+  };
+
   const handleCSVUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+    setQrCodeZip(null);
+    setProgresso(0);
     const reader = new FileReader();
     reader.onload = (e) => {
       const linhas = e.target.result.split("\n").map((x) => x.trim()).filter((x) => x);
@@ -140,18 +150,7 @@ export default function CriarQRCode() {
       setMensagem("Nenhum código válido no arquivo CSV.");
       return;
     }
-    try {
-      const zip = new JSZip();
-      for (const cod of loteCsvCódigos) {
-        const qr = await desenharQRCodeComTexto(cod);
-        zip.file(`qrcode_${cod}.png`, qr.split(",")[1], { base64: true });
-      }
-      const blob = await zip.generateAsync({ type: "blob" });
-      setQrCodeZip(blob);
-      setMensagem("QR Codes gerados com sucesso.");
-    } catch {
-      setMensagem("Erro ao gerar QR Codes do CSV.");
-    }
+    await gerarLote(loteCsvCódigos);
   };
 
   return (
@@ -159,7 +158,21 @@ export default function CriarQRCode() {
       <h1>Gerar QR Code</h1>
 
       <label>Modo de Geração:</label>
-      <select value={modo} onChange={(e) => setModo(e.target.value)}>
+      <select
+        value={modo}
+        onChange={(e) => {
+          setModo(e.target.value);
+          setCodigo("");
+          setQrDataUrl("");
+          setNome("");
+          setTextoQR("");
+          setMensagem("");
+          setLoteTexto("");
+          setLoteCsvCódigos([]);
+          setQrCodeZip(null);
+          setProgresso(0);
+        }}
+      >
         <option>Manual</option>
         <option>Lote via Texto</option>
         <option>Lote via CSV</option>
@@ -204,10 +217,15 @@ export default function CriarQRCode() {
             className="fullWidthInput"
             rows="5"
             value={loteTexto}
-            onChange={(e) => setLoteTexto(e.target.value)}
+            onChange={(e) => {
+              setLoteTexto(e.target.value);
+              setQrCodeZip(null);
+              setProgresso(0);
+            }}
             placeholder="Ex: MASP.00610, MASP.00611, 3013"
           />
           <button onClick={handleProcessarTextoLote}>Gerar QR Codes em Lote</button>
+          {progresso > 0 && progresso < 100 && <p>Progresso: {progresso}%</p>}
           {qrCodeZip && <button onClick={() => saveAs(qrCodeZip, "qrcodes_lote.zip")}>Baixar ZIP</button>}
         </>
       )}
@@ -219,6 +237,7 @@ export default function CriarQRCode() {
           {loteCsvCódigos.length > 0 && (
             <button onClick={handleProcessarCSV}>Gerar QR Codes</button>
           )}
+          {progresso > 0 && progresso < 100 && <p>Progresso: {progresso}%</p>}
           {qrCodeZip && <button onClick={() => saveAs(qrCodeZip, "qrcodes_csv.zip")}>Baixar ZIP</button>}
         </>
       )}
