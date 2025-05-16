@@ -13,7 +13,6 @@ export default function Movimentacao() {
   const [localNome, setLocalNome] = useState("");
 
   const [tipoSelecionado, setTipoSelecionado] = useState("");
-  const [observacoes, setObservacoes] = useState(""); // Novo campo observações
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("");
 
@@ -98,34 +97,20 @@ export default function Movimentacao() {
     }
 
     try {
-      // Para cada obra, registra a movimentação e se tiver observação envia depois
       for (const obra of obras) {
-        const movimentacao = await registrarMovimentacao(
+        await registrarMovimentacao(
           obra.id,
           localId,
           tipoSelecionado
         );
-
-        // Se observações não vazias, salva na API
-        if (observacoes.trim()) {
-          const token = localStorage.getItem("token");
-          await api.post(
-            `/movimentacoes/${movimentacao.id}/observacoes`,
-            { observacao: observacoes.trim() },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }
       }
-
       setMensagem("Movimentações registradas com sucesso!");
       setTipoMensagem("success");
 
-      // Limpa campos
       setObras([]);
       setLocalId(null);
       setLocalNome("");
       setTipoSelecionado("");
-      setObservacoes(""); // limpa observações
     } catch {
       setMensagem("Erro ao registrar movimentações.");
       setTipoMensagem("error");
@@ -230,18 +215,6 @@ export default function Movimentacao() {
           <option value="Entrada">Entrada</option>
           <option value="Saída">Saída</option>
         </select>
-      </div>
-
-      {/* Observações */}
-      <div style={{ marginTop: 20, textAlign: "left" }}>
-        <label>Observações (opcional):</label>
-        <textarea
-          rows={3}
-          value={observacoes}
-          onChange={(e) => setObservacoes(e.target.value)}
-          placeholder="Digite aqui alguma observação"
-          style={{ width: "100%" }}
-        />
       </div>
 
       <button onClick={handleRegistrar} style={{ marginTop: 20 }}>

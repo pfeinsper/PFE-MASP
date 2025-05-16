@@ -156,15 +156,9 @@ app.get("/movimentacoes", async (req, res) => {
     let query = `
       SELECT 
         m.id, m.obra_id, m.local_id, m.obra_nome, m.local_nome, m.usuario_id, m.usuario_nome, m.tipo_movimentacao, m.data_movimentacao,
-        o.autoria,
-        mo.observacao
+        o.autoria
       FROM movimentacoes m
       LEFT JOIN obras o ON o.id = m.obra_id
-      LEFT JOIN (
-        SELECT movimentacao_id, MIN(observacao) AS observacao
-        FROM movimentacoes_observacoes
-        GROUP BY movimentacao_id
-      ) mo ON mo.movimentacao_id = m.id
       WHERE 1=1
     `;
 
@@ -272,32 +266,6 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
   } catch (error) {
     console.error("Erro ao adicionar movimentação:", error);
     res.status(500).send("Erro no servidor");
-  }
-});
-
-// Adicionar observação a uma movimentação
-app.post("/movimentacoes/:id/observacoes", autenticarToken, async (req, res) => {
-  try {
-    const movimentacaoId = req.params.id;
-    const { observacao } = req.body;
-
-    if (!observacao || observacao.trim() === "") {
-      return res.status(400).json({ error: "Observação vazia" });
-    }
-
-    const query = `
-      INSERT INTO movimentacoes_observacoes (movimentacao_id, observacao)
-      VALUES ($1, $2)
-      RETURNING *;
-    `;
-
-    const values = [movimentacaoId, observacao.trim()];
-    const result = await pool.query(query, values);
-
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Erro ao salvar observação");
   }
 });
 
