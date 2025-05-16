@@ -156,11 +156,14 @@ export default function Consulta() {
 
       <div className="autocomplete-container">
         <label>Tipo de Movimentação</label>
-        <input
-          type="text"
+        <select
           value={tipoMovimentacao}
           onChange={(e) => setTipoMovimentacao(e.target.value)}
-        />
+        >
+          <option value="">Selecione...</option>
+          <option value="Entrada">Entrada</option>
+          <option value="Saída">Saída</option>
+        </select>
       </div>
 
       <div className="autocomplete-container">

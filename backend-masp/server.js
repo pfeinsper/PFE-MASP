@@ -146,8 +146,9 @@ app.get("/movimentacoes", async (req, res) => {
 
     // Filtros para data_fim
     if (data_fim) {
+      const fimDoDia = DateTime.fromISO(data_fim, { zone: "America/Sao_Paulo" }).endOf('day').toISO();
       query += ` AND data_movimentacao <= $${paramIndex}`;
-      values.push(data_fim);
+      values.push(fimDoDia);
       paramIndex++;
     }
 
