@@ -97,13 +97,26 @@ app.get("/obras/codigo/:codigo", async (req, res) => {
 // Listar locais
 app.get("/locais", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM locais");
+    const { search } = req.query;
+
+    let query = "SELECT * FROM locais";
+    const values = [];
+
+    if (search) {
+      query += " WHERE nome ILIKE $1 OR CAST(id AS TEXT) = $1";
+      values.push(`%${search}%`);
+    }
+
+    query += " ORDER BY nome";
+
+    const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
     console.error("Erro ao buscar locais:", error);
     res.status(500).send("Erro no servidor");
   }
 });
+
 
 // Buscar local por código
 app.get("/locais/codigo/:codigo", async (req, res) => {
@@ -130,8 +143,10 @@ app.get("/movimentacoes", async (req, res) => {
 
     let query = `
       SELECT 
-        id, obra_id, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao
-      FROM movimentacoes
+        m.id, m.obra_id, m.local_id, m.obra_nome, m.local_nome, m.usuario_id, m.usuario_nome, m.tipo_movimentacao, m.data_movimentacao,
+        o.autoria
+      FROM movimentacoes m
+      LEFT JOIN obras o ON o.id = m.obra_id
       WHERE 1=1
     `;
     const values = [];

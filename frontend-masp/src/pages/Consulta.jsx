@@ -1,13 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import "../index.css";
 
 export default function Consulta() {
   // Campos dos filtros
   const [usuarioNome, setUsuarioNome] = useState("");
-  const [localNome, setLocalNome] = useState("");
-  const [obraId, setObraId] = useState("");
-  const [localId, setLocalId] = useState("");
+
+  // Obra autocomplete
+  const [obraTermo, setObraTermo] = useState("");
+  const [obraIdSelecionada, setObraIdSelecionada] = useState("");
+  const [obraSugestoes, setObraSugestoes] = useState([]);
+
+  // Local autocomplete
+  const [localTermo, setLocalTermo] = useState("");
+  const [localIdSelecionado, setLocalIdSelecionado] = useState("");
+  const [localSugestoes, setLocalSugestoes] = useState([]);
+
   const [tipoMovimentacao, setTipoMovimentacao] = useState("");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
@@ -19,7 +27,48 @@ export default function Consulta() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Função que monta e envia os filtros
+  // Busca sugestões de obras
+  useEffect(() => {
+    if (obraTermo.length === 0) {
+      setObraSugestoes([]);
+      setObraIdSelecionada("");
+      return;
+    }
+    api
+      .get(`/obras?search=${encodeURIComponent(obraTermo)}`)
+      .then((res) => setObraSugestoes(res.data))
+      .catch(() => setObraSugestoes([]));
+  }, [obraTermo]);
+
+  // Busca sugestões de locais
+  useEffect(() => {
+    if (localTermo.length === 0) {
+      setLocalSugestoes([]);
+      setLocalIdSelecionado("");
+      return;
+    }
+    api
+      .get(`/locais?search=${encodeURIComponent(localTermo)}`)
+      .then((res) => setLocalSugestoes(res.data))
+      .catch(() => setLocalSugestoes([]));
+  }, [localTermo]);
+
+  // Seleciona obra da lista
+  const handleSelecionarObra = (obra) => {
+    const texto = `${obra.titulo} - ${obra.autoria || "Desconhecida"}`;
+    setObraTermo(texto);
+    setObraIdSelecionada(obra.id);
+    setObraSugestoes([]);
+  };
+
+  // Seleciona local da lista
+  const handleSelecionarLocal = (local) => {
+    setLocalTermo(local.nome);
+    setLocalIdSelecionado(local.id);
+    setLocalSugestoes([]);
+  };
+
+  // Monta e envia filtros para buscar movimentações
   const buscarMovimentacoes = async () => {
     try {
       setLoading(true);
@@ -28,9 +77,8 @@ export default function Consulta() {
       const params = {};
 
       if (usuarioNome) params.usuario_nome = usuarioNome.trim();
-      if (localNome) params.local_nome = localNome.trim();
-      if (obraId) params.obra_id = obraId.trim();
-      if (localId) params.local_id = localId.trim();
+      if (obraIdSelecionada) params.obra_id = obraIdSelecionada;
+      if (localIdSelecionado) params.local_id = localIdSelecionado;
       if (tipoMovimentacao) params.tipo_movimentacao = tipoMovimentacao.trim();
       if (dataInicio) params.data_inicio = dataInicio;
       if (dataFim) params.data_fim = dataFim;
@@ -55,9 +103,12 @@ export default function Consulta() {
   // Limpa todos os campos
   const handleLimpar = () => {
     setUsuarioNome("");
-    setLocalNome("");
-    setObraId("");
-    setLocalId("");
+    setObraTermo("");
+    setObraIdSelecionada("");
+    setObraSugestoes([]);
+    setLocalTermo("");
+    setLocalIdSelecionado("");
+    setLocalSugestoes([]);
     setTipoMovimentacao("");
     setDataInicio("");
     setDataFim("");
@@ -65,7 +116,7 @@ export default function Consulta() {
     setError(null);
   };
 
-  // Função para exportar movimentações para CSV
+  // Exportar para CSV (sem alterações)
   const exportarCSV = () => {
     if (movimentacoes.length === 0) {
       alert("Nenhuma movimentação para exportar.");
@@ -73,13 +124,12 @@ export default function Consulta() {
     }
 
     const headers = [
-      "ID", "Obra ID", "Local ID", "Obra Nome", "Local Nome", "Usuário Nome", 
+      "ID", "Obra ID", "Local ID", "Obra Nome", "Local Nome", "Usuário Nome",
       "Tipo de Movimentação", "Data da Movimentação"
     ];
 
-    // Formata os dados para CSV
     const csvRows = [];
-    csvRows.push(headers.join(",")); // Cabeçalho
+    csvRows.push(headers.join(","));
 
     movimentacoes.forEach((mov) => {
       const row = [
@@ -98,26 +148,25 @@ export default function Consulta() {
       csvRows.push(row.join(","));
     });
 
-    // Cria um arquivo CSV e faz o download
     const csvData = new Blob([csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(csvData);
     const a = document.createElement("a");
     a.href = url;
     a.download = "movimentacoes.csv";
     a.click();
-    URL.revokeObjectURL(url); // Libera o URL
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="container">
       <h1>Consulta de Movimentações</h1>
       <p className="TextoNormal">
-        Filtre as movimentações por <strong>data</strong>, <strong>usuário</strong>,{" "}
-        <strong>local</strong>, <strong>ID da obra</strong>,{" "}
-        <strong>ID do local</strong> e <strong>tipo de movimentação</strong>.
+        Filtre e Exporte as movimentações por <strong>Usuário</strong>, <strong>Local</strong>,{" "}
+        <strong>Obra</strong>, <strong>Data</strong>,{" "}
+        e <strong>Tipo de Movimentação</strong>.
       </p>
 
-      {/* Campos de filtro */}
+      {/* Nome do Usuário */}
       <div className="autocomplete-container">
         <label>Nome do Usuário</label>
         <input
@@ -127,33 +176,63 @@ export default function Consulta() {
         />
       </div>
 
-      <div className="autocomplete-container">
-        <label>Nome do Local</label>
+      {/* Obra autocomplete */}
+      <div className="autocomplete-container" style={{ position: "relative" }}>
+        <label>Obra (Nome, ID ou Autor)</label>
         <input
           type="text"
-          value={localNome}
-          onChange={(e) => setLocalNome(e.target.value)}
+          value={obraTermo}
+          onChange={e => {
+            setObraTermo(e.target.value);
+            setObraIdSelecionada("");
+          }}
+          placeholder="Digite nome, ID ou autor"
+          autoComplete="off"
         />
+        {obraSugestoes.length > 0 && (
+          <ul className="autocomplete-list mostrar" style={{ maxHeight: 200, overflowY: "auto" }}>
+            {obraSugestoes.map(obra => (
+              <li
+                key={obra.id}
+                onClick={() => handleSelecionarObra(obra)}
+                style={{ cursor: "pointer" }}
+              >
+                {obra.titulo} - {obra.autoria || "Desconhecida"}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <div className="autocomplete-container">
-        <label>ID da Obra</label>
+      {/* Local autocomplete */}
+      <div className="autocomplete-container" style={{ position: "relative" }}>
+        <label>Local (Nome ou ID)</label>
         <input
           type="text"
-          value={obraId}
-          onChange={(e) => setObraId(e.target.value)}
+          value={localTermo}
+          onChange={e => {
+            setLocalTermo(e.target.value);
+            setLocalIdSelecionado("");
+          }}
+          placeholder="Digite nome ou ID do local"
+          autoComplete="off"
         />
+        {localSugestoes.length > 0 && (
+          <ul className="autocomplete-list mostrar" style={{ maxHeight: 200, overflowY: "auto" }}>
+            {localSugestoes.map(local => (
+              <li
+                key={local.id}
+                onClick={() => handleSelecionarLocal(local)}
+                style={{ cursor: "pointer" }}
+              >
+                {local.nome}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <div className="autocomplete-container">
-        <label>ID do Local</label>
-        <input
-          type="text"
-          value={localId}
-          onChange={(e) => setLocalId(e.target.value)}
-        />
-      </div>
-
+      {/* Tipo de Movimentação */}
       <div className="autocomplete-container">
         <label>Tipo de Movimentação</label>
         <select
@@ -166,6 +245,7 @@ export default function Consulta() {
         </select>
       </div>
 
+      {/* Data de Início */}
       <div className="autocomplete-container">
         <label>Data de Início</label>
         <input
@@ -175,6 +255,7 @@ export default function Consulta() {
         />
       </div>
 
+      {/* Data de Fim */}
       <div className="autocomplete-container">
         <label>Data de Fim</label>
         <input
@@ -193,12 +274,11 @@ export default function Consulta() {
         Limpar Filtros
       </button>
 
-      {/* Botão de Exportar para CSV */}
       <button onClick={exportarCSV} style={{ marginTop: 20 }}>
         Exportar para CSV
       </button>
 
-      {/* Mensagem de erro ou sucesso */}
+      {/* Mensagem de erro */}
       {error && <p style={{ color: "red", marginTop: 20 }}>{error}</p>}
 
       {/* Resultado */}
@@ -219,7 +299,9 @@ export default function Consulta() {
                 <div>
                   <strong>Usuário:</strong> {mov.usuario_nome}
                   <br />
-                  <strong>Nome da Obra:</strong> {mov.obra_nome} {/* Nome da obra adicionado */}
+                  <strong>Nome da Obra:</strong> {mov.obra_nome}
+                  <br />
+                  <strong>Autoria:</strong> {mov.autoria || "Desconhecida"}
                   <br />
                   <strong>Local:</strong> {mov.local_nome}
                 </div>
