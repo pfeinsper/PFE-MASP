@@ -13,6 +13,7 @@ export default function Movimentacao() {
   const [localNome, setLocalNome] = useState("");
 
   const [tipoSelecionado, setTipoSelecionado] = useState("");
+  const [observacoes, setObservacoes] = useState(""); // Novo campo observações
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("");
 
@@ -63,7 +64,8 @@ export default function Movimentacao() {
   const handleScanLocal = async (codigo) => {
     setLerLocal(false);
     try {
-      const res = await api.get(`/locais/codigo/${codigo}`);
+      const codigoLimpo = codigo.trim();
+      const res = await api.get(`/locais/codigo/${encodeURIComponent(codigoLimpo)}`);
       setLocalId(res.data.id);
       setLocalNome(res.data.nome);
     } catch {
@@ -96,15 +98,34 @@ export default function Movimentacao() {
     }
 
     try {
+      // Para cada obra, registra a movimentação e se tiver observação envia depois
       for (const obra of obras) {
-        await registrarMovimentacao(obra.id, localId, tipoSelecionado);
+        const movimentacao = await registrarMovimentacao(
+          obra.id,
+          localId,
+          tipoSelecionado
+        );
+
+        // Se observações não vazias, salva na API
+        if (observacoes.trim()) {
+          const token = localStorage.getItem("token");
+          await api.post(
+            `/movimentacoes/${movimentacao.id}/observacoes`,
+            { observacao: observacoes.trim() },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
       }
+
       setMensagem("Movimentações registradas com sucesso!");
       setTipoMensagem("success");
+
+      // Limpa campos
       setObras([]);
       setLocalId(null);
       setLocalNome("");
       setTipoSelecionado("");
+      setObservacoes(""); // limpa observações
     } catch {
       setMensagem("Erro ao registrar movimentações.");
       setTipoMensagem("error");
@@ -117,7 +138,9 @@ export default function Movimentacao() {
 
       <div style={{ marginTop: 20, textAlign: "left" }}>
         <label>Usuário</label>
-        <p style={{ fontStyle: "italic", color: "orangered" }}>{usuarioNome || "(não autenticado)"}</p>
+        <p style={{ fontStyle: "italic", color: "orangered" }}>
+          {usuarioNome || "(não autenticado)"}
+        </p>
       </div>
 
       {/* Obras escaneadas */}
@@ -126,7 +149,15 @@ export default function Movimentacao() {
         {obras.length > 0 ? (
           <ul style={{ paddingLeft: 20 }}>
             {obras.map((obra, index) => (
-              <li key={index} style={{ marginBottom: "10px", position: "relative", fontStyle: "italic", color: "orangered" }}>
+              <li
+                key={index}
+                style={{
+                  marginBottom: "10px",
+                  position: "relative",
+                  fontStyle: "italic",
+                  color: "orangered",
+                }}
+              >
                 Nº Tombo: {obra.id} | {obra.titulo} | {obra.autoria || "Desconhecido"}
                 <span
                   className="clear-btn"
@@ -138,7 +169,6 @@ export default function Movimentacao() {
             ))}
           </ul>
         ) : (
-          // <p style={{ fontStyle: "italic", color: "gray" }}>(Nenhuma obra lida)</p>
           <p>(Nenhuma obra lida)</p>
         )}
         <button onClick={() => setLerObra(true)} style={{ marginTop: 10 }}>
@@ -147,7 +177,11 @@ export default function Movimentacao() {
         {lerObra && (
           <div className="overlay">
             <div className="qr-container">
-              <LerQR key={Date.now()} onScanResult={handleScanObra} onClose={() => setLerObra(false)} />
+              <LerQR
+                key={Date.now()}
+                onScanResult={handleScanObra}
+                onClose={() => setLerObra(false)}
+              />
             </div>
           </div>
         )}
@@ -156,20 +190,32 @@ export default function Movimentacao() {
       {/* Local */}
       <div style={{ marginTop: 20, textAlign: "left" }}>
         <label>Local selecionado:</label>
-        {/* <p style={{ fontStyle: "italic", color: localId ? "orangered" : "gray" }}> */}
         <p>
-          {localId ? <><em>ID: {localId}</em> | {localNome}</> : "(Nenhum local lido)"}
+          {localId ? (
+            <>
+              <em>ID: {localId}</em> | {localNome}
+            </>
+          ) : (
+            "(Nenhum local lido)"
+          )}
         </p>
-        {!localId && <button onClick={() => setLerLocal(true)}>Escanear QR do Local</button>}
+        {!localId && (
+          <button onClick={() => setLerLocal(true)}>Escanear QR do Local</button>
+        )}
         {lerLocal && (
           <div className="overlay">
             <div className="qr-container">
-              <LerQR key={Date.now()} onScanResult={handleScanLocal} onClose={() => setLerLocal(false)} />
+              <LerQR
+                key={Date.now()}
+                onScanResult={handleScanLocal}
+                onClose={() => setLerLocal(false)}
+              />
             </div>
           </div>
         )}
       </div>
 
+      {/* Tipo de movimentação */}
       <div className="select-container" style={{ marginTop: 20 }}>
         <label>Tipo de Movimentação:</label>
         <select
@@ -184,6 +230,18 @@ export default function Movimentacao() {
           <option value="Entrada">Entrada</option>
           <option value="Saída">Saída</option>
         </select>
+      </div>
+
+      {/* Observações */}
+      <div style={{ marginTop: 20, textAlign: "left" }}>
+        <label>Observações (opcional):</label>
+        <textarea
+          rows={3}
+          value={observacoes}
+          onChange={(e) => setObservacoes(e.target.value)}
+          placeholder="Digite aqui alguma observação"
+          style={{ width: "100%" }}
+        />
       </div>
 
       <button onClick={handleRegistrar} style={{ marginTop: 20 }}>

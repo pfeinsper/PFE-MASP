@@ -128,12 +128,13 @@ app.get("/locais", async (req, res) => {
 
 
 
-// Buscar local por código
+// Buscar local por código (id numérico ou código alfanumérico)
 app.get("/locais/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
+    // Busca pelo campo 'codigo' ou pelo 'id' convertido para texto
     const result = await pool.query(
-      "SELECT * FROM locais WHERE id = $1::integer",
+      "SELECT * FROM locais WHERE codigo = $1 OR CAST(id AS TEXT) = $1",
       [codigo]
     );
     if (result.rows.length === 0) {
@@ -146,6 +147,7 @@ app.get("/locais/codigo/:codigo", async (req, res) => {
   }
 });
 
+
 // Listar movimentações
 app.get("/movimentacoes", async (req, res) => {
   try {
@@ -154,58 +156,58 @@ app.get("/movimentacoes", async (req, res) => {
     let query = `
       SELECT 
         m.id, m.obra_id, m.local_id, m.obra_nome, m.local_nome, m.usuario_id, m.usuario_nome, m.tipo_movimentacao, m.data_movimentacao,
-        o.autoria
+        o.autoria,
+        mo.observacao
       FROM movimentacoes m
       LEFT JOIN obras o ON o.id = m.obra_id
+      LEFT JOIN (
+        SELECT movimentacao_id, MIN(observacao) AS observacao
+        FROM movimentacoes_observacoes
+        GROUP BY movimentacao_id
+      ) mo ON mo.movimentacao_id = m.id
       WHERE 1=1
     `;
+
     const values = [];
     let paramIndex = 1;
 
-    // Filtros para data_inicio
     if (data_inicio) {
       query += ` AND data_movimentacao >= $${paramIndex}`;
       values.push(data_inicio);
       paramIndex++;
     }
 
-    // Filtros para data_fim
     if (data_fim) {
-      const fimDoDia = DateTime.fromISO(data_fim, { zone: "America/Sao_Paulo" }).endOf('day').toISO();
+      const fimDoDia = DateTime.fromISO(data_fim, { zone: "America/Sao_Paulo" }).endOf("day").toISO();
       query += ` AND data_movimentacao <= $${paramIndex}`;
       values.push(fimDoDia);
       paramIndex++;
     }
 
-    // Filtros para usuario_nome
     if (usuario_nome) {
       query += ` AND usuario_nome ILIKE $${paramIndex}`;
       values.push(`%${usuario_nome}%`);
       paramIndex++;
     }
 
-    // Filtros para local_nome
     if (local_nome) {
       query += ` AND local_nome ILIKE $${paramIndex}`;
       values.push(`%${local_nome}%`);
       paramIndex++;
     }
 
-    // Filtros para obra_id
     if (obra_id) {
       query += ` AND obra_id = $${paramIndex}`;
       values.push(obra_id);
       paramIndex++;
     }
 
-    // Filtros para local_id
     if (local_id) {
       query += ` AND local_id = $${paramIndex}`;
       values.push(local_id);
       paramIndex++;
     }
 
-    // Filtros para tipo_movimentacao
     if (tipo_movimentacao) {
       query += ` AND tipo_movimentacao = $${paramIndex}`;
       values.push(tipo_movimentacao);
@@ -218,19 +220,8 @@ app.get("/movimentacoes", async (req, res) => {
       paramIndex++;
     }
 
-
-    // Organizando os resultados pela data de movimentação
     query += " ORDER BY data_movimentacao DESC";
 
-    // Log para depuração
-    console.log("Query recebida:", req.query); // Parâmetros da URL
-    console.log("Query SQL gerada:", query);  // Sua query final
-    console.log("Valores dos parâmetros:", values); // Valores usados na query
-    console.log("Query params recebidos:", req.query);
-    console.log("Query SQL gerada:", query);
-    console.log("Valores dos parâmetros:", values);
-
-    // Executando a consulta no banco de dados
     const result = await pool.query(query, values);
 
     res.json(result.rows);
@@ -239,7 +230,6 @@ app.get("/movimentacoes", async (req, res) => {
     res.status(500).send("Erro no servidor");
   }
 });
-
 
 // Adicionar movimentação
 app.post("/movimentacoes", autenticarToken, async (req, res) => {
@@ -282,6 +272,32 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
   } catch (error) {
     console.error("Erro ao adicionar movimentação:", error);
     res.status(500).send("Erro no servidor");
+  }
+});
+
+// Adicionar observação a uma movimentação
+app.post("/movimentacoes/:id/observacoes", autenticarToken, async (req, res) => {
+  try {
+    const movimentacaoId = req.params.id;
+    const { observacao } = req.body;
+
+    if (!observacao || observacao.trim() === "") {
+      return res.status(400).json({ error: "Observação vazia" });
+    }
+
+    const query = `
+      INSERT INTO movimentacoes_observacoes (movimentacao_id, observacao)
+      VALUES ($1, $2)
+      RETURNING *;
+    `;
+
+    const values = [movimentacaoId, observacao.trim()];
+    const result = await pool.query(query, values);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erro ao salvar observação");
   }
 });
 

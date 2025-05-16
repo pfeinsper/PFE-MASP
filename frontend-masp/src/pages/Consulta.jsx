@@ -343,6 +343,12 @@ export default function Consulta() {
                   <strong>Autoria:</strong> {mov.autoria || "Desconhecida"}
                   <br />
                   <strong>Local:</strong> {mov.local_nome}
+                  {mov.observacao && (
+                    <>
+                      <br />
+                      <strong>Observação:</strong> {mov.observacao}
+                    </>
+                  )}
                 </div>
               </li>
             ))}
