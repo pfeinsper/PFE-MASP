@@ -161,9 +161,9 @@ export default function Consulta() {
     <div className="container">
       <h1>Consulta de Movimentações</h1>
       <p className="TextoNormal">
-        Filtre e Exporte as movimentações por <strong>Usuário</strong>, <strong>Local</strong>,{" "}
-        <strong>Obra</strong>, <strong>Data</strong>,{" "}
-        e <strong>Tipo de Movimentação</strong>.
+        Filtre e Exporte as movimentações por <strong>Usuário</strong>, <strong>Obra</strong>,{" "}
+        <strong>Local</strong>, <strong>Tipo de Movimentação</strong>,{" "}
+        e <strong>Data</strong>.
       </p>
 
       {/* Nome do Usuário */}

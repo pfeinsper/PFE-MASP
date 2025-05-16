@@ -64,7 +64,7 @@ app.get("/obras", async (req, res) => {
     const values = [];
 
     if (search) {
-      query += " WHERE titulo ILIKE $1 OR id::TEXT ILIKE $1";
+      query += " WHERE titulo ILIKE $1 OR id::TEXT ILIKE $1 OR autoria ILIKE $1";
       values.push(`%${search}%`);
     }
 
@@ -75,6 +75,7 @@ app.get("/obras", async (req, res) => {
     res.status(500).send("Erro no servidor");
   }
 });
+
 
 // Buscar obra por código
 app.get("/obras/codigo/:codigo", async (req, res) => {
