@@ -288,13 +288,25 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
 // Listar usuários
 app.get("/usuarios", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM usuarios ORDER BY nome");
+    const { search } = req.query;
+    let query = "SELECT * FROM usuarios";
+    const values = [];
+
+    if (search) {
+      query += " WHERE nome ILIKE $1";
+      values.push(`%${search}%`);
+    }
+
+    query += " ORDER BY nome";
+
+    const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
     console.error("Erro ao buscar usuários:", error);
     res.status(500).send("Erro no servidor");
   }
 });
+
 
 // Histórico de movimentações de uma obra
 app.get("/movimentacoes/obra/:obra_id", async (req, res) => {

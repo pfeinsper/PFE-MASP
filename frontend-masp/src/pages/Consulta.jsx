@@ -3,8 +3,10 @@ import api from "../services/api";
 import "../index.css";
 
 export default function Consulta() {
-  // Campos dos filtros
-  const [usuarioNome, setUsuarioNome] = useState("");
+  // Usuário autocomplete
+  const [usuarioTermo, setUsuarioTermo] = useState("");
+  const [usuarioIdSelecionado, setUsuarioIdSelecionado] = useState("");
+  const [usuarioSugestoes, setUsuarioSugestoes] = useState([]);
 
   // Obra autocomplete
   const [obraTermo, setObraTermo] = useState("");
@@ -20,40 +22,55 @@ export default function Consulta() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
-  // Resultados da busca
+  // Resultados
   const [movimentacoes, setMovimentacoes] = useState([]);
-
-  // Carregando ou erro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Busca sugestões de obras
+  // Buscar sugestões Usuários
+  useEffect(() => {
+    if (usuarioTermo.length === 0) {
+      setUsuarioSugestoes([]);
+      setUsuarioIdSelecionado("");
+      return;
+    }
+    api.get(`/usuarios?search=${encodeURIComponent(usuarioTermo)}`)
+      .then(res => setUsuarioSugestoes(res.data))
+      .catch(() => setUsuarioSugestoes([]));
+  }, [usuarioTermo]);
+
+  // Buscar sugestões Obras
   useEffect(() => {
     if (obraTermo.length === 0) {
       setObraSugestoes([]);
       setObraIdSelecionada("");
       return;
     }
-    api
-      .get(`/obras?search=${encodeURIComponent(obraTermo)}`)
-      .then((res) => setObraSugestoes(res.data))
+    api.get(`/obras?search=${encodeURIComponent(obraTermo)}`)
+      .then(res => setObraSugestoes(res.data))
       .catch(() => setObraSugestoes([]));
   }, [obraTermo]);
 
-  // Busca sugestões de locais
+  // Buscar sugestões Locais
   useEffect(() => {
     if (localTermo.length === 0) {
       setLocalSugestoes([]);
       setLocalIdSelecionado("");
       return;
     }
-    api
-      .get(`/locais?search=${encodeURIComponent(localTermo)}`)
-      .then((res) => setLocalSugestoes(res.data))
+    api.get(`/locais?search=${encodeURIComponent(localTermo)}`)
+      .then(res => setLocalSugestoes(res.data))
       .catch(() => setLocalSugestoes([]));
   }, [localTermo]);
 
-  // Seleciona obra da lista
+  // Selecionar usuário
+  const handleSelecionarUsuario = (usuario) => {
+    setUsuarioTermo(usuario.nome);
+    setUsuarioIdSelecionado(usuario.id);
+    setUsuarioSugestoes([]);
+  };
+
+  // Selecionar obra
   const handleSelecionarObra = (obra) => {
     const texto = `${obra.titulo} - ${obra.autoria || "Desconhecida"}`;
     setObraTermo(texto);
@@ -61,14 +78,14 @@ export default function Consulta() {
     setObraSugestoes([]);
   };
 
-  // Seleciona local da lista
+  // Selecionar local
   const handleSelecionarLocal = (local) => {
     setLocalTermo(local.nome);
     setLocalIdSelecionado(local.id);
     setLocalSugestoes([]);
   };
 
-  // Monta e envia filtros para buscar movimentações
+  // Buscar movimentações
   const buscarMovimentacoes = async () => {
     try {
       setLoading(true);
@@ -76,7 +93,7 @@ export default function Consulta() {
 
       const params = {};
 
-      if (usuarioNome) params.usuario_nome = usuarioNome.trim();
+      if (usuarioIdSelecionado) params.usuario_id = usuarioIdSelecionado;
       if (obraIdSelecionada) params.obra_id = obraIdSelecionada;
       if (localIdSelecionado) params.local_id = localIdSelecionado;
       if (tipoMovimentacao) params.tipo_movimentacao = tipoMovimentacao.trim();
@@ -100,15 +117,20 @@ export default function Consulta() {
     }
   };
 
-  // Limpa todos os campos
+  // Limpar filtros
   const handleLimpar = () => {
-    setUsuarioNome("");
+    setUsuarioTermo("");
+    setUsuarioIdSelecionado("");
+    setUsuarioSugestoes([]);
+
     setObraTermo("");
     setObraIdSelecionada("");
     setObraSugestoes([]);
+
     setLocalTermo("");
     setLocalIdSelecionado("");
     setLocalSugestoes([]);
+
     setTipoMovimentacao("");
     setDataInicio("");
     setDataFim("");
@@ -116,7 +138,7 @@ export default function Consulta() {
     setError(null);
   };
 
-  // Exportar para CSV (sem alterações)
+  // Exportar CSV
   const exportarCSV = () => {
     if (movimentacoes.length === 0) {
       alert("Nenhuma movimentação para exportar.");
@@ -131,7 +153,7 @@ export default function Consulta() {
     const csvRows = [];
     csvRows.push(headers.join(","));
 
-    movimentacoes.forEach((mov) => {
+    movimentacoes.forEach(mov => {
       const row = [
         mov.id,
         mov.obra_id,
@@ -161,19 +183,36 @@ export default function Consulta() {
     <div className="container">
       <h1>Consulta de Movimentações</h1>
       <p className="TextoNormal">
-        Filtre e Exporte as movimentações por <strong>Usuário</strong>, <strong>Obra</strong>,{" "}
-        <strong>Local</strong>, <strong>Tipo de Movimentação</strong>,{" "}
-        e <strong>Data</strong>.
+        Filtre as movimentações por <strong>Usuário</strong>, <strong>Obra (Nome, ID ou Autor)</strong>,{" "}
+        <strong>Local (Nome ou ID)</strong>, <strong>Tipo de Movimentação</strong> e <strong>Data</strong>.
       </p>
 
-      {/* Nome do Usuário */}
-      <div className="autocomplete-container">
+      {/* Usuário autocomplete */}
+      <div className="autocomplete-container" style={{ position: "relative" }}>
         <label>Nome do Usuário</label>
         <input
           type="text"
-          value={usuarioNome}
-          onChange={(e) => setUsuarioNome(e.target.value)}
+          value={usuarioTermo}
+          onChange={e => {
+            setUsuarioTermo(e.target.value);
+            setUsuarioIdSelecionado("");
+          }}
+          placeholder="Digite o nome do usuário"
+          autoComplete="off"
         />
+        {usuarioSugestoes.length > 0 && (
+          <ul className="autocomplete-list mostrar" style={{ maxHeight: 200, overflowY: "auto" }}>
+            {usuarioSugestoes.map(usuario => (
+              <li
+                key={usuario.id}
+                onClick={() => handleSelecionarUsuario(usuario)}
+                style={{ cursor: "pointer" }}
+              >
+                {usuario.nome}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Obra autocomplete */}
@@ -237,7 +276,7 @@ export default function Consulta() {
         <label>Tipo de Movimentação</label>
         <select
           value={tipoMovimentacao}
-          onChange={(e) => setTipoMovimentacao(e.target.value)}
+          onChange={e => setTipoMovimentacao(e.target.value)}
         >
           <option value="">Selecione...</option>
           <option value="Entrada">Entrada</option>
@@ -251,7 +290,7 @@ export default function Consulta() {
         <input
           type="date"
           value={dataInicio}
-          onChange={(e) => setDataInicio(e.target.value)}
+          onChange={e => setDataInicio(e.target.value)}
         />
       </div>
 
@@ -261,7 +300,7 @@ export default function Consulta() {
         <input
           type="date"
           value={dataFim}
-          onChange={(e) => setDataFim(e.target.value)}
+          onChange={e => setDataFim(e.target.value)}
         />
       </div>
 
