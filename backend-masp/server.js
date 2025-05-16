@@ -103,8 +103,16 @@ app.get("/locais", async (req, res) => {
     const values = [];
 
     if (search) {
-      query += " WHERE nome ILIKE $1 OR CAST(id AS TEXT) = $1";
-      values.push(`%${search}%`);
+      // Verifica se é um número inteiro positivo
+      if (/^\d+$/.test(search)) {
+        // Busca por ID exato
+        query += " WHERE id = $1";
+        values.push(parseInt(search, 10));
+      } else {
+        // Busca por nome com ILIKE %search%
+        query += " WHERE nome ILIKE $1";
+        values.push(`%${search}%`);
+      }
     }
 
     query += " ORDER BY nome";
@@ -116,6 +124,7 @@ app.get("/locais", async (req, res) => {
     res.status(500).send("Erro no servidor");
   }
 });
+
 
 
 // Buscar local por código
