@@ -1,18 +1,20 @@
 require("dotenv").config();
-process.env.TZ = "America/Sao_Paulo"; 
+process.env.TZ = "America/Sao_Paulo";
+
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { DateTime } = require("luxon"); 
+const { DateTime } = require("luxon");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Configuração do PostgreSQL via .env
+// Detecta se ambiente é produção
 const isProduction = process.env.NODE_ENV === "production";
 
+// Conexão com o PostgreSQL
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -22,16 +24,15 @@ const pool = new Pool({
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
-// ─── força o timezone do pool para São Paulo ─────────────────────────
-(async () => {
-  const client = await pool.connect();
+// Garante timezone para cada nova conexão do pool
+pool.on("connect", async (client) => {
   try {
-    await client.query(`SET TIME ZONE 'America/Sao_Paulo';`);
-    console.log("Timezone do Postgre ajustado para America/Sao_Paulo");
-  } finally {
-    client.release();
+    await client.query("SET TIME ZONE 'America/Sao_Paulo'");
+    console.log("✅ Timezone configurado para America/Sao_Paulo");
+  } catch (err) {
+    console.error("❌ Erro ao configurar timezone:", err);
   }
-})();
+});
 
 // Middlewares
 app.use(cors());
@@ -76,7 +77,6 @@ app.get("/obras", async (req, res) => {
   }
 });
 
-
 // Buscar obra por código
 app.get("/obras/codigo/:codigo", async (req, res) => {
   try {
@@ -99,25 +99,20 @@ app.get("/obras/codigo/:codigo", async (req, res) => {
 app.get("/locais", async (req, res) => {
   try {
     const { search } = req.query;
-
     let query = "SELECT * FROM locais";
     const values = [];
 
     if (search) {
-      // Verifica se é um número inteiro positivo
       if (/^\d+$/.test(search)) {
-        // Busca por ID exato
         query += " WHERE id = $1";
         values.push(parseInt(search, 10));
       } else {
-        // Busca por nome com ILIKE %search%
         query += " WHERE nome ILIKE $1";
         values.push(`%${search}%`);
       }
     }
 
     query += " ORDER BY nome";
-
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
@@ -126,13 +121,10 @@ app.get("/locais", async (req, res) => {
   }
 });
 
-
-
-// Buscar local por código (id numérico ou código alfanumérico)
+// Buscar local por código
 app.get("/locais/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
-    // Busca pelo campo 'codigo' ou pelo 'id' convertido para texto
     const result = await pool.query(
       "SELECT * FROM locais WHERE codigo = $1 OR CAST(id AS TEXT) = $1",
       [codigo]
@@ -147,11 +139,15 @@ app.get("/locais/codigo/:codigo", async (req, res) => {
   }
 });
 
-
 // Listar movimentações
 app.get("/movimentacoes", async (req, res) => {
   try {
-    const { data_inicio, data_fim, usuario_nome, local_nome, obra_id, local_id, tipo_movimentacao, search } = req.query;
+    const {
+      data_inicio, data_fim,
+      usuario_nome, local_nome,
+      obra_id, local_id,
+      tipo_movimentacao, search
+    } = req.query;
 
     let query = `
       SELECT 
@@ -161,7 +157,6 @@ app.get("/movimentacoes", async (req, res) => {
       LEFT JOIN obras o ON o.id = m.obra_id
       WHERE 1=1
     `;
-
     const values = [];
     let paramIndex = 1;
 
@@ -215,9 +210,7 @@ app.get("/movimentacoes", async (req, res) => {
     }
 
     query += " ORDER BY data_movimentacao DESC";
-
     const result = await pool.query(query, values);
-
     res.json(result.rows);
   } catch (error) {
     console.error("Erro ao buscar movimentações:", error);
@@ -231,17 +224,11 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
     const { obra_id, local_id, tipo_movimentacao } = req.body;
     const usuario_id = req.usuario.id;
 
-    if (!obra_id || !local_id) {
-      return res.status(400).json({ error: "Obra e local são obrigatórios." });
-    }
-    if (!tipo_movimentacao) {
-      return res.status(400).json({ error: "Tipo de movimentação é obrigatório." });
+    if (!obra_id || !local_id || !tipo_movimentacao) {
+      return res.status(400).json({ error: "Campos obrigatórios ausentes." });
     }
 
-    // ✅ Data correta com fuso de São Paulo
-    const dataMovimentacao = DateTime.now()
-      .setZone("America/Sao_Paulo")
-      .toISO(); // ex: "2025-05-13T15:15:00.000-03:00"
+    const dataMovimentacao = DateTime.now().setZone("America/Sao_Paulo").toISO();
 
     const query = `
       INSERT INTO movimentacoes
@@ -249,19 +236,17 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
       VALUES (
         $1::varchar,
         $2::integer,
-        (SELECT titulo FROM obras WHERE id = $1::varchar),
-        (SELECT nome FROM locais WHERE id = $2::integer),
+        (SELECT titulo FROM obras WHERE id = $1),
+        (SELECT nome FROM locais WHERE id = $2),
         $3::integer,
-        (SELECT nome FROM usuarios WHERE id = $3::integer),
+        (SELECT nome FROM usuarios WHERE id = $3),
         $4::varchar,
         $5::timestamptz
       )
       RETURNING *;
     `;
-
     const values = [obra_id, local_id, usuario_id, tipo_movimentacao, dataMovimentacao];
     const result = await pool.query(query, values);
-
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Erro ao adicionar movimentação:", error);
@@ -282,7 +267,6 @@ app.get("/usuarios", async (req, res) => {
     }
 
     query += " ORDER BY nome";
-
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
@@ -291,17 +275,12 @@ app.get("/usuarios", async (req, res) => {
   }
 });
 
-
 // Histórico de movimentações de uma obra
 app.get("/movimentacoes/obra/:obra_id", async (req, res) => {
   try {
     const { obra_id } = req.params;
     const result = await pool.query(`
-      SELECT 
-        tipo_movimentacao,
-        data_movimentacao AS data,
-        local_nome,
-        usuario_nome
+      SELECT tipo_movimentacao, data_movimentacao AS data, local_nome, usuario_nome
       FROM movimentacoes
       WHERE obra_id = $1
       ORDER BY data_movimentacao DESC
@@ -340,7 +319,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Iniciar servidor
+// Inicia o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
