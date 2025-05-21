@@ -19,6 +19,10 @@ export default function Movimentacao() {
   const [lerObra, setLerObra] = useState(false);
   const [lerLocal, setLerLocal] = useState(false);
 
+  const [registrando, setRegistrando] = useState(false);
+  const [escaneandoObra, setEscaneandoObra] = useState(false);
+
+
   useEffect(() => {
     if (!mensagem) return;
     const id = setTimeout(() => {
@@ -43,7 +47,10 @@ export default function Movimentacao() {
   }, []);
 
   const handleScanObra = async (codigo) => {
+    if (escaneandoObra) return; // impede scan duplo
+    setEscaneandoObra(true);
     setLerObra(false);
+
     try {
       const res = await api.get(`/obras/codigo/${codigo}`);
       const nova = res.data;
@@ -57,8 +64,12 @@ export default function Movimentacao() {
     } catch {
       setMensagem("Obra não encontrada ou erro no servidor.");
       setTipoMensagem("error");
+    } finally {
+      setEscaneandoObra(false);
     }
   };
+
+
 
   const handleScanLocal = async (codigo) => {
     setLerLocal(false);
@@ -96,17 +107,14 @@ export default function Movimentacao() {
       return;
     }
 
+    setRegistrando(true);
+
     try {
       for (const obra of obras) {
-        await registrarMovimentacao(
-          obra.id,
-          localId,
-          tipoSelecionado
-        );
+        await registrarMovimentacao(obra.id, localId, tipoSelecionado);
       }
       setMensagem("Movimentações registradas com sucesso!");
       setTipoMensagem("success");
-
       setObras([]);
       setLocalId(null);
       setLocalNome("");
@@ -114,8 +122,11 @@ export default function Movimentacao() {
     } catch {
       setMensagem("Erro ao registrar movimentações.");
       setTipoMensagem("error");
+    } finally {
+      setRegistrando(false);
     }
   };
+
 
   return (
     <div className="container">
@@ -163,8 +174,12 @@ export default function Movimentacao() {
         ) : (
           <p>(Nenhuma obra lida)</p>
         )}
-        <button onClick={() => setLerObra(true)} style={{ marginTop: 10 }}>
-          Escanear QR da Obra
+        <button
+          onClick={() => setLerObra(true)}
+          disabled={escaneandoObra}
+          style={{ marginTop: 10, opacity: escaneandoObra ? 0.6 : 1 }}
+        >
+          {escaneandoObra ? "Aguardando leitura..." : "Escanear QR da Obra"}
         </button>
         {lerObra && (
           <div className="overlay">
@@ -181,11 +196,21 @@ export default function Movimentacao() {
 
       {/* Local */}
       <div style={{ marginTop: 20, textAlign: "left" }}>
-        <label>Local selecionado:</label>
-        <p>
+        <label>Local escaneado:</label>
+        <p style={{ position: "relative" }}>
           {localId ? (
             <>
               <em>ID: {localId}</em> | {localNome}
+              <span
+                className="clear-btn"
+                onClick={() => {
+                  setLocalId(null);
+                  setLocalNome("");
+                }}
+                title="Limpar local"
+              >
+                ×
+              </span>
             </>
           ) : (
             "(Nenhum local lido)"
@@ -224,8 +249,12 @@ export default function Movimentacao() {
         </select>
       </div>
 
-      <button onClick={handleRegistrar} style={{ marginTop: 20 }}>
-        Registrar
+      <button
+        onClick={handleRegistrar}
+        disabled={registrando}
+        style={{ marginTop: 20, opacity: registrando ? 0.6 : 1 }}
+      >
+        {registrando ? "Registrando..." : "Registrar"}
       </button>
 
       {mensagem && <p className={`mensagem ${tipoMensagem}`}>{mensagem}</p>}
