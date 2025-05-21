@@ -255,7 +255,7 @@ export default function Consulta() {
 
       {/* Local */}
       <div className="autocomplete-container" style={{ position: "relative" }}>
-        <label>Local</label>
+        <label>Local (ID ou nome)</label>
         <input
           type="text"
           value={localTermo}

@@ -50,6 +50,10 @@ input {
   border-radius: 5px;
   font-size: 17px;
   transition: border-color 0.2s;
+  /* padding-right: 30px; */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 input:focus {
