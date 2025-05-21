@@ -371,7 +371,8 @@ app.post("/login", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM usuarios WHERE nome = $1", [nome]);
     const user = result.rows[0];
-    if (!user || senha !== user.senha) {
+    const senhaValida = await bcrypt.compare(senha, user.senha_hash);
+    if (!user || !senhaValida) {
       return res.status(401).json({ error: "Usuário ou senha inválidos" });
     }
 
