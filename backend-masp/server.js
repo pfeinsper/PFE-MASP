@@ -3,6 +3,7 @@ process.env.TZ = "America/Sao_Paulo";
 
 const express = require("express");
 const cors = require("cors");
+const axios = require("axios");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -57,43 +58,76 @@ app.get("/", (req, res) => {
   res.send("API do MASP está rodando!");
 });
 
-// Listar obras
+//
+// ======== Endpoints de Obras usando API do MASP ========
+//
+
+// Listar obras (com filtro por número de tombo via filtro5)
 app.get("/obras", async (req, res) => {
   try {
     const { search } = req.query;
-    let query = "SELECT * FROM obras";
-    const values = [];
+    const params = new URLSearchParams({
+      nPaginas: "1",
+      registosPagina: process.env.MASP_API_PAGE_SIZE,
+      sLang: process.env.MASP_API_LANG,
+    });
+    if (search) params.append("filtro5", search);
 
-    if (search) {
-      query += " WHERE titulo ILIKE $1 OR id::TEXT ILIKE $1 OR autoria ILIKE $1";
-      values.push(`%${search}%`);
-    }
+    const url = `${process.env.MASP_API_BASE_URL}/Objeto?${params.toString()}`;
+    const response = await axios.get(url);
+    const lista = response.data.Objeto || [];
 
-    const result = await pool.query(query, values);
-    res.json(result.rows);
+    const obras = lista.map(item => ({
+      id: item.inventory_number,
+      titulo: item.title,
+      autoria: item.artist_name,
+      imageUrl: item.image?.[0]?.["image.Url"] || null
+    }));
+
+
+    res.json(obras);
   } catch (error) {
-    console.error("Erro ao buscar obras:", error);
+    console.error("Erro consumindo MASP /Objeto:", error);
     res.status(500).send("Erro no servidor");
   }
 });
 
-// Buscar obra por código
+// Buscar obra por código ou tombo (usando filtro5 e retornando o primeiro resultado)
 app.get("/obras/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM obras WHERE id = $1",
-      [codigo]
-    );
-    if (result.rows.length === 0) {
+    const params = new URLSearchParams({
+      nPaginas: "1",
+      registosPagina: "1",
+      sLang: process.env.MASP_API_LANG,
+      filtro5: codigo
+    });
+
+    const url = `${process.env.MASP_API_BASE_URL}/Objeto?${params.toString()}`;
+    const response = await axios.get(url);
+    const item = (response.data.Objeto || [])[0];
+
+    if (!item) {
       return res.status(404).json({ error: "Obra não encontrada" });
     }
-    res.json(result.rows[0]);
+
+    res.json({
+      id: item.inventory_number,
+      titulo: item.title,
+      autoria: item.artist_name,
+      imageUrl: item.image?.[0]?.["image.Url"] || null
+    });
+
   } catch (error) {
-    console.error("Erro ao buscar obra pelo código:", error);
+    console.error("Erro consumindo MASP /Objeto?filtro5:", error);
     res.status(500).send("Erro no servidor");
   }
 });
+
+//
+// ======== Fim dos Endpoints de Obras ========
+//
+
 
 // Listar locais
 app.get("/locais", async (req, res) => {
@@ -145,114 +179,148 @@ app.get("/movimentacoes", async (req, res) => {
     const {
       data_inicio, data_fim,
       usuario_nome, local_nome,
-      obra_id, local_id,
+      obra_id: obra_tombo,  // recebemos o tombo aqui
+      local_id,
       tipo_movimentacao, search
     } = req.query;
 
+    // selecionamos obra_tombo em vez de obra_id e removemos o join em obras
     let query = `
       SELECT 
-        m.id, m.obra_id, m.local_id, m.obra_nome, m.local_nome, m.usuario_id, m.usuario_nome, m.tipo_movimentacao, m.data_movimentacao,
-        o.autoria
+        m.id,
+        m.obra_tombo,
+        m.local_id,
+        m.obra_nome,
+        m.local_nome,
+        m.usuario_id,
+        m.usuario_nome,
+        m.tipo_movimentacao,
+        m.data_movimentacao
       FROM movimentacoes m
-      LEFT JOIN obras o ON o.id = m.obra_id
       WHERE 1=1
     `;
     const values = [];
-    let paramIndex = 1;
+    let idx = 1;
 
     if (data_inicio) {
-      query += ` AND data_movimentacao >= $${paramIndex}`;
+      query += ` AND data_movimentacao >= $${idx++}`;
       values.push(data_inicio);
-      paramIndex++;
     }
-
     if (data_fim) {
-      const fimDoDia = DateTime.fromISO(data_fim, { zone: "America/Sao_Paulo" }).endOf("day").toISO();
-      query += ` AND data_movimentacao <= $${paramIndex}`;
+      const fimDoDia = DateTime.fromISO(data_fim, { zone: "America/Sao_Paulo" })
+                             .endOf("day").toISO();
+      query += ` AND data_movimentacao <= $${idx++}`;
       values.push(fimDoDia);
-      paramIndex++;
     }
-
     if (usuario_nome) {
-      query += ` AND usuario_nome ILIKE $${paramIndex}`;
+      query += ` AND usuario_nome ILIKE $${idx++}`;
       values.push(`%${usuario_nome}%`);
-      paramIndex++;
     }
-
     if (local_nome) {
-      query += ` AND local_nome ILIKE $${paramIndex}`;
+      query += ` AND local_nome ILIKE $${idx++}`;
       values.push(`%${local_nome}%`);
-      paramIndex++;
     }
-
-    if (obra_id) {
-      query += ` AND obra_id = $${paramIndex}`;
-      values.push(obra_id);
-      paramIndex++;
+    if (obra_tombo) {
+      query += ` AND obra_tombo = $${idx++}`;
+      values.push(obra_tombo);
     }
-
     if (local_id) {
-      query += ` AND local_id = $${paramIndex}`;
+      query += ` AND local_id = $${idx++}`;
       values.push(local_id);
-      paramIndex++;
     }
-
     if (tipo_movimentacao) {
-      query += ` AND tipo_movimentacao = $${paramIndex}`;
+      query += ` AND tipo_movimentacao = $${idx++}`;
       values.push(tipo_movimentacao);
-      paramIndex++;
     }
-
     if (search) {
-      query += ` AND (obra_nome ILIKE $${paramIndex} OR local_nome ILIKE $${paramIndex} OR usuario_nome ILIKE $${paramIndex})`;
+      query += ` AND (
+        obra_nome ILIKE $${idx} OR
+        local_nome ILIKE $${idx} OR
+        usuario_nome ILIKE $${idx}
+      )`;
       values.push(`%${search}%`);
-      paramIndex++;
     }
 
     query += " ORDER BY data_movimentacao DESC";
     const result = await pool.query(query, values);
     res.json(result.rows);
+
   } catch (error) {
     console.error("Erro ao buscar movimentações:", error);
     res.status(500).send("Erro no servidor");
   }
 });
 
+
 // Adicionar movimentação
 app.post("/movimentacoes", autenticarToken, async (req, res) => {
   try {
+    // Aqui 'obra_id' continua vindo do body, mas é apenas o tombo
     const { obra_id, local_id, tipo_movimentacao } = req.body;
-    const usuario_id = req.usuario.id;
+    const usuario_id   = req.usuario.id;
+    const usuario_nome = req.usuario.nome;
 
     if (!obra_id || !local_id || !tipo_movimentacao) {
       return res.status(400).json({ error: "Campos obrigatórios ausentes." });
     }
 
-    const dataMovimentacao = DateTime.now().setZone("America/Sao_Paulo").toISO();
+    // 1) pega dados da obra na API (obra_id é o tombo)
+    const maspParams = new URLSearchParams({
+      nPaginas:       "1",
+      registosPagina: "1",
+      sLang:          process.env.MASP_API_LANG,
+      filtro5:        obra_id
+    });
+    const maspUrl = `${process.env.MASP_API_BASE_URL}/Objeto?${maspParams}`;
+    const maspRes = await axios.get(maspUrl);
+    const obraItem = maspRes.data.Objeto?.[0];
+    if (!obraItem) {
+      return res.status(400).json({ error: "Obra não encontrada na API do MASP" });
+    }
+    const obra_tombo = obraItem.inventory_number;  // é este valor que vai para a coluna obra_tombo
+    const obra_nome  = obraItem.title;
 
-    const query = `
+    // 2) busca nome do local como antes
+    const locRes = await pool.query(
+      "SELECT nome FROM locais WHERE id = $1",
+      [local_id]
+    );
+    if (locRes.rows.length === 0) {
+      return res.status(400).json({ error: "Local não encontrado." });
+    }
+    const local_nome = locRes.rows[0].nome;
+
+    // 3) monta timestamp
+    const dataMov = DateTime.now()
+      .setZone("America/Sao_Paulo")
+      .toISO();
+
+    // 4) insere em obra_tombo em vez de obra_id
+    const insertQuery = `
       INSERT INTO movimentacoes
-        (obra_id, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao)
-      VALUES (
-        $1::varchar,
-        $2::integer,
-        (SELECT titulo FROM obras WHERE id = $1),
-        (SELECT nome FROM locais WHERE id = $2),
-        $3::integer,
-        (SELECT nome FROM usuarios WHERE id = $3),
-        $4::varchar,
-        $5::timestamptz
-      )
+        (obra_tombo, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       RETURNING *;
     `;
-    const values = [obra_id, local_id, usuario_id, tipo_movimentacao, dataMovimentacao];
-    const result = await pool.query(query, values);
-    res.status(201).json(result.rows[0]);
+    const insertValues = [
+      obra_tombo,
+      local_id,
+      obra_nome,
+      local_nome,
+      usuario_id,
+      usuario_nome,
+      tipo_movimentacao,
+      dataMov,
+    ];
+    const insertRes = await pool.query(insertQuery, insertValues);
+    res.status(201).json(insertRes.rows[0]);
+
   } catch (error) {
     console.error("Erro ao adicionar movimentação:", error);
     res.status(500).send("Erro no servidor");
   }
 });
+
 
 // Listar usuários
 app.get("/usuarios", async (req, res) => {

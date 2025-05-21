@@ -134,22 +134,29 @@ export default function Movimentacao() {
         {obras.length > 0 ? (
           <ul style={{ paddingLeft: 20 }}>
             {obras.map((obra, index) => (
-              <li
-                key={index}
-                style={{
-                  marginBottom: "10px",
-                  position: "relative",
-                  fontStyle: "italic",
-                  color: "orangered",
-                }}
-              >
-                Nº Tombo: {obra.id} | {obra.titulo} | {obra.autoria || "Desconhecido"}
-                <span
-                  className="clear-btn"
-                  onClick={() => handleRemoverObra(index)}
-                >
-                  ×
-                </span>
+              <li key={index} style={{ marginBottom: 20, position: "relative" }}>
+                <div style={{ fontStyle: "italic", color: "orangered" }}>
+                  Nº Tombo: {obra.id} | {obra.titulo} | {obra.autoria || "Desconhecido"}
+                  <span className="clear-btn" onClick={() => handleRemoverObra(index)}>
+                    ×
+                  </span>
+                </div>
+
+                {obra.imageUrl && obras.length <= 3 && (
+                  <div style={{ textAlign: "center", marginTop: 8 }}>
+                    <img
+                      src={obra.imageUrl}
+                      alt={obra.titulo}
+                      style={{
+                        display: "block",
+                        margin: "0 auto",
+                        maxWidth: 200,
+                        border: "1px solid #ddd",
+                        borderRadius: 4,
+                      }}
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
