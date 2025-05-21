@@ -36,7 +36,16 @@ pool.on("connect", async (client) => {
 });
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "https://pfe-masp.onrender.com",
+    "http://localhost:5173"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 // Middleware de autenticação
@@ -371,10 +380,16 @@ app.post("/login", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM usuarios WHERE nome = $1", [nome]);
     const user = result.rows[0];
-    const senhaValida = await bcrypt.compare(senha, user.senha_hash);
-    if (!user || !senhaValida) {
-      return res.status(401).json({ error: "Usuário ou senha inválidos" });
+    
+    if (!user) {
+      return res.status(401).json({ error: "Usuário inválido" });
     }
+
+    const senhaValida = await bcrypt.compare(senha, user.senha_hash);
+    if (!senhaValida) {
+      return res.status(401).json({ error: "Senha inválida" });
+    }
+
 
     const token = jwt.sign(
       { id: user.id, nome: user.nome },
