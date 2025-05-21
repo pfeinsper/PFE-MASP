@@ -1,9 +1,13 @@
+// O campo senha é usado exclusivamente para novos cadastros ou atualizações manuais. 
+// Após a execução do script de hash, este campo é limpo.
+
 // ▶️ Como executar
 // 1. Navegue até a pasta do backend:
 // cd backend-masp
 
 // 2. Execute o script:
 // node atualizarSenhas.js
+
 
 const bcrypt = require("bcrypt");
 const { Pool } = require("pg");
@@ -15,13 +19,13 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  ssl: true, // ou true se estiver na Render com SSL forçado
+  ssl: { rejectUnauthorized: false }
 });
 
 async function atualizarSenhas() {
   try {
     const result = await pool.query(
-      "SELECT id, senha FROM usuarios WHERE senha IS NOT NULL AND senha_hash IS NULL"
+      "SELECT id, senha FROM usuarios WHERE senha IS NOT NULL"
     );
     const usuarios = result.rows;
 
