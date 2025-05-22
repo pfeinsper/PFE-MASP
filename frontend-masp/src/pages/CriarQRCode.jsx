@@ -235,7 +235,7 @@ export default function CriarQRCode() {
           <p className="TextoNormal" style={{textAlign: "left"}}>Envie um arquivo <strong>.csv</strong> com os códigos (um por linha).</p>
           <input type="file" accept=".csv" onChange={handleCSVUpload} className="fullWidthInput" />
           {loteCsvCódigos.length > 0 && (
-            <button onClick={handleProcessarCSV}>Gerar QR Codes</button>
+            <button onClick={handleProcessarCSV}>Gerar QR Codes em Lote</button>
           )}
           {progresso > 0 && progresso < 100 && <p>Progresso: {progresso}%</p>}
           {qrCodeZip && <button onClick={() => saveAs(qrCodeZip, "qrcodes_csv.zip")}>Baixar ZIP</button>}
