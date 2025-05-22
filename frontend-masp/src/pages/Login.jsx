@@ -44,7 +44,8 @@ export default function Login() {
   return (
     <div className="container">
       <h1>Login</h1>
-      <p className="TextoNormal">Realize seu login para acessar o site.</p>
+      {/* quero a palavra login em negrito */}
+      <p className="TextoNormal">Realize seu <strong>login</strong> para acessar o site.</p>
       <input
         type="text"
         placeholder="Usuário"

@@ -180,7 +180,7 @@ export default function CriarQRCode() {
 
       {modo === "Manual" && (
         <>
-          <p className="TextoNormal">
+          <p className="TextoNormal" style={{textAlign: "left"}}>
             Digite o <strong>ID da obra</strong> ou <strong>ID do local</strong> para gerar o QR Code.
           </p>
           <input

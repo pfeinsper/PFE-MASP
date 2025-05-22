@@ -330,6 +330,7 @@ label {
   border-radius: 5px;
   font-size: 17px;
   transition: border-color 0.2s;
+  margin-top: -1px;  
 }
 .fullWidthInput:focus {
   outline: none;
