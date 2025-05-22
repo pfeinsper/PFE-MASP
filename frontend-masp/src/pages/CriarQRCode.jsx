@@ -210,8 +210,8 @@ export default function CriarQRCode() {
 
       {modo === "Lote via Texto" && (
         <>
-          <p className="TextoNormal">
-            Insira os códigos separados por vírgula, espaço ou quebra de linha.
+          <p className="TextoNormal" style={{textAlign: "left"}}>
+            Insira os códigos separados por <strong>vírgula, espaço ou quebra de linha</strong>.
           </p>
           <textarea
             className="fullWidthInput"
@@ -232,7 +232,7 @@ export default function CriarQRCode() {
 
       {modo === "Lote via CSV" && (
         <>
-          <p className="TextoNormal">Envie um arquivo <strong>.csv</strong> com os códigos (um por linha).</p>
+          <p className="TextoNormal" style={{textAlign: "left"}}>Envie um arquivo <strong>.csv</strong> com os códigos (um por linha).</p>
           <input type="file" accept=".csv" onChange={handleCSVUpload} className="fullWidthInput" />
           {loteCsvCódigos.length > 0 && (
             <button onClick={handleProcessarCSV}>Gerar QR Codes</button>
