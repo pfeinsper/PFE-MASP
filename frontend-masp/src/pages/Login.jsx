@@ -9,6 +9,7 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [lembrar, setLembrar] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
     const nomeSalvo = localStorage.getItem("nome_usuario");
@@ -19,6 +20,7 @@ export default function Login() {
   }, []);
 
   const handleLogin = async () => {
+    setCarregando(true);
     try {
       const res = await api.post("/login", { nome, senha });
       localStorage.setItem("token", res.data.token);
@@ -33,8 +35,11 @@ export default function Login() {
     } catch (err) {
       console.error("Erro no login:", err);
       setErro("Nome ou senha inválidos.");
+    } finally {
+      setCarregando(false);
     }
   };
+
 
   return (
     <div className="container">
@@ -85,10 +90,18 @@ export default function Login() {
       </div>
       <button
         onClick={handleLogin}
-        style={{ marginTop: 8, width: "100%", padding: "10px" }}
+        disabled={carregando}
+        style={{
+          marginTop: 8,
+          width: "100%",
+          padding: "10px",
+          opacity: carregando ? 0.6 : 1,
+          cursor: carregando ? "not-allowed" : "pointer"
+        }}
       >
-        Entrar
+        {carregando ? "Entrando..." : "Entrar"}
       </button>
+
       {erro && <p style={{ color: "red" }}>{erro}</p>}
     </div>
   );
