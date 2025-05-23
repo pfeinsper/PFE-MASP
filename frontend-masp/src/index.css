@@ -324,13 +324,14 @@ label {
 
 .fullWidthInput {
   width: 95%;
-  padding: 12px;
+  padding: 8px;
   margin-bottom: 20px;
   border: 2px solid #ddd;
   border-radius: 5px;
-  font-size: 17px;
+  font-size: 16px;
   transition: border-color 0.2s;
   margin-top: -1px;  
+  font-family: inherit;
 }
 .fullWidthInput:focus {
   outline: none;
