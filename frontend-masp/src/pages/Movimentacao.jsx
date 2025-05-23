@@ -11,6 +11,7 @@ export default function Movimentacao() {
   const [obras, setObras] = useState([]); // array de obras
   const [localId, setLocalId] = useState(null);
   const [localNome, setLocalNome] = useState("");
+  const [notasAdicionais, setNotasAdicionais] = useState("");
 
   const [tipoSelecionado, setTipoSelecionado] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -111,7 +112,12 @@ export default function Movimentacao() {
 
     try {
       for (const obra of obras) {
-        await registrarMovimentacao(obra.id, localId, tipoSelecionado);
+        await registrarMovimentacao(
+          obra.id,
+          localId,
+          tipoSelecionado,
+          notasAdicionais
+        );
       }
       setMensagem("Movimentações registradas com sucesso!");
       setTipoMensagem("success");
@@ -119,6 +125,7 @@ export default function Movimentacao() {
       setLocalId(null);
       setLocalNome("");
       setTipoSelecionado("");
+      setNotasAdicionais("");     // ← aqui
     } catch {
       setMensagem("Erro ao registrar movimentações.");
       setTipoMensagem("error");
@@ -247,6 +254,17 @@ export default function Movimentacao() {
           <option value="Entrada">Entrada</option>
           <option value="Saída">Saída</option>
         </select>
+      </div>
+
+      <div style={{ marginTop: 20, textAlign: "left" }}>
+        <label>Notas Adicionais:</label>
+        <textarea
+          className="fullWidthInput"
+          rows={3}
+          value={notasAdicionais}
+          onChange={e => setNotasAdicionais(e.target.value)}
+          placeholder="Observações (ex: estado da obra, cuidados...)"
+        />
       </div>
 
       <button

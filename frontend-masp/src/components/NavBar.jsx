@@ -33,9 +33,9 @@ export default function Navbar() {
         <div className="menu-content">
           <span className="close-btn" onClick={toggleMenu}>×</span>
           <Link to="/movimentacao" onClick={toggleMenu}>Movimentação</Link>
-          <Link to="/buscar" onClick={toggleMenu}>Buscar Obra</Link>
+          {/* <Link to="/buscar" onClick={toggleMenu}>Buscar Obra</Link> */}
           <Link to="/gerar-qr" onClick={toggleMenu}>Gerar QR Code</Link>
-          {/* <Link to="/consulta" onClick={toggleMenu}>Consulta de Movimentações</Link> */}
+          <Link to="/consulta" onClick={toggleMenu}>Consulta de Movimentações</Link>
         </div>
       </div>
     </>

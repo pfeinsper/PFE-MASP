@@ -204,7 +204,8 @@ app.get("/movimentacoes", async (req, res) => {
         m.usuario_id,
         m.usuario_nome,
         m.tipo_movimentacao,
-        m.data_movimentacao
+        m.data_movimentacao,
+        m.notas_adicionais
       FROM movimentacoes m
       WHERE 1=1
     `;
@@ -264,10 +265,11 @@ app.get("/movimentacoes", async (req, res) => {
 // Adicionar movimentação
 app.post("/movimentacoes", autenticarToken, async (req, res) => {
   try {
-    // Aqui 'obra_id' continua vindo do body, mas é apenas o tombo
-    const { obra_id, local_id, tipo_movimentacao } = req.body;
-    const usuario_id   = req.usuario.id;
+    const { obra_id, local_id, tipo_movimentacao, notas_adicionais } = req.body;
+    const usuario_id   = req.usuario.id;  
     const usuario_nome = req.usuario.nome;
+
+    console.log("✔️ notas_adicionais recebido:", notas_adicionais);
 
     if (!obra_id || !local_id || !tipo_movimentacao) {
       return res.status(400).json({ error: "Campos obrigatórios ausentes." });
@@ -289,6 +291,8 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
     const obra_tombo = obraItem.inventory_number;  // é este valor que vai para a coluna obra_tombo
     const obra_nome  = obraItem.title;
 
+    // console.log("QUERY:", insertQuery);
+    // console.log("VALORES:", insertValues);
     // 2) busca nome do local como antes
     const locRes = await pool.query(
       "SELECT nome FROM locais WHERE id = $1",
@@ -307,8 +311,8 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
     // 4) insere em obra_tombo em vez de obra_id
     const insertQuery = `
       INSERT INTO movimentacoes
-        (obra_tombo, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        (obra_tombo, local_id, obra_nome, local_nome, usuario_id, usuario_nome, tipo_movimentacao, data_movimentacao, notas_adicionais)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       RETURNING *;
     `;
     const insertValues = [
@@ -320,7 +324,13 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
       usuario_nome,
       tipo_movimentacao,
       dataMov,
+      notas_adicionais || null,
     ];
+
+    console.log("✔️ notas_adicionais recebido:", notas_adicionais);
+    console.log("QUERY:", insertQuery);
+    console.log("VALORES:", insertValues);
+
     const insertRes = await pool.query(insertQuery, insertValues);
     res.status(201).json(insertRes.rows[0]);
 

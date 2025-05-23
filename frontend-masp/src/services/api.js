@@ -18,12 +18,13 @@ api.interceptors.request.use((config) => {
  * 2) registrarMovimentacao agora só precisa de obra_id, local_id e tipo_movimentacao.
  *    O usuario_id é obtido no servidor a partir do token.
  */
-export async function registrarMovimentacao(obra_id, local_id, tipo_movimentacao) {
+export async function registrarMovimentacao(obra_id, local_id, tipo_movimentacao, notasAdicionais) {
   try {
     const response = await api.post("/movimentacoes", {
       obra_id,
       local_id,
-      tipo_movimentacao
+      tipo_movimentacao,
+      notas_adicionais: notasAdicionais
     });
     return response.data;
   } catch (error) {
