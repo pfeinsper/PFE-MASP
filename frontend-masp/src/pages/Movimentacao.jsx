@@ -1,4 +1,3 @@
-// src/pages/Movimentacao.jsx
 import React, { useEffect, useState } from "react";
 import api, { registrarMovimentacao } from "../services/api";
 import LerQR from "../components/LerQR";
@@ -8,7 +7,7 @@ export default function Movimentacao() {
   const [usuarioNome, setUsuarioNome] = useState("");
   const [usuarioId, setUsuarioId] = useState(null);
 
-  const [obras, setObras] = useState([]); // array de obras
+  const [obras, setObras] = useState([]); 
   const [localId, setLocalId] = useState(null);
   const [localNome, setLocalNome] = useState("");
   const [notasAdicionais, setNotasAdicionais] = useState("");
@@ -48,7 +47,7 @@ export default function Movimentacao() {
   }, []);
 
   const handleScanObra = async (codigo) => {
-    if (escaneandoObra) return; // impede scan duplo
+    if (escaneandoObra) return; 
     setEscaneandoObra(true);
     setLerObra(false);
 
@@ -125,7 +124,7 @@ export default function Movimentacao() {
       setLocalId(null);
       setLocalNome("");
       setTipoSelecionado("");
-      setNotasAdicionais("");     // ← aqui
+      setNotasAdicionais("");     
     } catch {
       setMensagem("Erro ao registrar movimentações.");
       setTipoMensagem("error");

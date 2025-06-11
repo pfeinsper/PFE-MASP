@@ -3,8 +3,8 @@ import api from "../services/api";
 import "../index.css";
 
 export default function Search() {
-  const [termo, setTermo] = useState("");           // o que o usuário vê no input
-  const [filtro, setFiltro] = useState("");         // só muda quando o usuário digita
+  const [termo, setTermo] = useState("");           
+  const [filtro, setFiltro] = useState("");         
   const [obra, setObra] = useState(null);
   const [movimentacoes, setMovimentacoes] = useState([]);
   const [sugestoes, setSugestoes] = useState([]);
@@ -42,9 +42,9 @@ export default function Search() {
 
   // 3) Quando o usuário clica numa sugestão
   const handleSelecionarSugestao = (obraSel) => {
-    setTermo(obraSel.titulo);  // preenche o input
-    setFiltro("");             // impede novo fetch de sugestões
-    setSugestoes([]);          // limpa a lista
+    setTermo(obraSel.titulo);  
+    setFiltro("");             
+    setSugestoes([]);          
   };
 
   // 4) Botão de limpar tudo
@@ -69,7 +69,7 @@ export default function Search() {
           value={termo}
           onChange={(e) => {
             setTermo(e.target.value);
-            setFiltro(e.target.value);  // só aqui mexe em 'filtro'
+            setFiltro(e.target.value);  
           }}
         />
 

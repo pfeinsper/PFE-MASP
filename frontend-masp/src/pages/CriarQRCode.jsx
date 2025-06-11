@@ -1,4 +1,3 @@
-// src/pages/CriarQRCode.jsx
 import React, { useState } from "react";
 import QRCode from "qrcode";
 import JSZip from "jszip";

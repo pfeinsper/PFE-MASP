@@ -44,7 +44,6 @@ export default function Login() {
   return (
     <div className="container">
       <h1>Login</h1>
-      {/* quero a palavra login em negrito */}
       <p className="TextoNormal">Realize seu <strong>login</strong> para acessar o site.</p>
       <input
         type="text"
@@ -67,7 +66,7 @@ export default function Login() {
           alignItems: "center",
           width: "100%",
           whiteSpace: "nowrap",
-          justifyContent: "flex-end", // Alinha à direita
+          justifyContent: "flex-end", 
         }}
       >
         <label

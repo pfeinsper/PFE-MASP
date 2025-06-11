@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
-import "./LerQR.css"; // ✅ Certifique-se de importar o CSS
+import "./LerQR.css"; 
 
 export default function LerQR({ onScanResult, onClose }) {
   const scannerRef = useRef(null);
@@ -53,7 +53,6 @@ export default function LerQR({ onScanResult, onClose }) {
 
   return (
     <div className="lerqr-container">
-      {/* ⚠️ Sem inline style de height! */}
       <div id={scannerContainerId}></div>
 
       <button

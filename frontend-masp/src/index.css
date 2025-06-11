@@ -1,11 +1,9 @@
-/* Font-face ou import do Google Fonts (exemplo: Open Sans) */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
 
 body {
   font-family: 'Open Sans', sans-serif;
   margin: 0;
   padding: 0;
-  /* Gradiente sutil no fundo */
   background: linear-gradient(45deg, #f7f7f7, #f0f0f0);
 }
 
@@ -50,7 +48,6 @@ input {
   border-radius: 5px;
   font-size: 17px;
   transition: border-color 0.2s;
-  /* padding-right: 30px; */
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -239,7 +236,7 @@ label {
   font-weight: bold;
   cursor: pointer;
   color: #d50000;
-  margin-right: 2%; /* <-- novo: puxa ele pra esquerda */
+  margin-right: 2%; 
 }
 
 /* Menu lateral (right side) */
