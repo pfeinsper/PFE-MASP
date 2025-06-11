@@ -1,157 +1,200 @@
-# Visão Geral
+# MASP - Controle de Movimentação de Obras
 
-#### Frontend (React)
-- Exibe dois campos de busca (um para obras, outro para locais), com funcionalidade de autocomplete.
-- Quando o usuário seleciona uma obra e um local, clicando em “Registrar”, o React envia uma requisição ao backend com { obra_id, local_id }.
+## Visão Geral do Projeto
 
-#### Backend (Node + Express + PostgreSQL)
-- Recebe a requisição de “nova movimentação” (rota POST /movimentacoes).
-- Faz um INSERT na tabela movimentacoes, mas preenchendo obra_nome e local_nome com subconsultas que buscam os nomes diretamente das tabelas obras e locais.
-- Retorna ao frontend o registro recém-criado ou um erro.
+Este projeto foi desenvolvido para automatizar o controle de movimentação e localização das obras do acervo do MASP (Museu de Arte de São Paulo Assis Chateaubriand). Tradicionalmente, o museu utilizava registros manuais em papel, o que gerava erros de transcrição e dificuldades de rastreamento. A solução propõe substituir o processo manual por um sistema digital baseado em QR Codes.
 
-### Instruções de Uso:
+## Objetivo
 
-##### Frontend
-1. Após clonar o repositório é necessário entrar na pasta do frontend: *cd frontend-masp*
-2. Depois de entrar na pasta é necessário instalar as dependências: *npm install*
-3. Após instalar as dependências, basta rodar o comando: *npm run dev*
-Isso iniciará o servidor local, e o projeto estará disponível em http://localhost:5173/ ou na URL exibida no terminal.
+* Registrar as movimentações de obras de forma digital e segura.
+* Facilitar a consulta de movimentações e gerar históricos de movimentação.
+* Gerar e imprimir QR Codes para obras e locais.
+* Integrar parcialmente com o banco oficial do MASP (In.Arte), garantindo informações atualizadas de obras.
 
-##### Backend
-1. Após clonar o repositório, entre na pasta do backend: *cd backend-masp*
-2. Instale as dependências: *npm install*
-3. Inicie o servidor backend: *npm run dev*
+---
 
-### Fluxo de uma movimentação
-Para ficar 100% claro, imagine que o usuário vai adicionar a movimentação de “Obra X” para “Local Y”:
+## Arquitetura da Solução
 
-1. Página carrega (Movimentacao.jsx faz api.get("/obras") e api.get("/locais")):
-- obras e locais são guardados no estado React.
+O sistema é composto por 3 camadas principais:
 
-2. Usuário digita parte do título da obra (ex: “x” em “Obra X”):
-- handleFiltrarObras filtra localmente as obras cujo titulo contenha “x”.
-- Aparece uma lista de autocomplete; usuário clica na “Obra X”.
-- handleSelecionarObra define:
-    - obraSelecionada = "Obra X"
-    - obraId = 123 (por exemplo)
-    - Fecha a lista.
+* **Frontend:** Aplicação React.js responsiva e intuitiva.
+* **Backend:** API REST em Node.js com Express.js.
+* **Banco de Dados:** PostgreSQL.
 
-3. Usuário digita parte do local (ex: “Loc” para “Local Y”):
-- handleFiltrarLocais faz a mesma lógica de filtragem.
-- Clica em “Local Y”.
-- handleSelecionarLocal define:
-    - localSelecionado = "Local Y"
-    - localId = 999
-    - Fecha a lista
+Tudo hospedado na nuvem (Render).
 
-4. Usuário clica em “Registrar”:
-- handleRegistrar checa: se obraId e localId não forem nulos, chama registrarMovimentacao(obraId, localId).
-- O registrarMovimentacao (em api.js) faz um POST /movimentacoes enviando { "obra_id": 123, "local_id": 999 }.
+Além disso, há integração com a API oficial do MASP (In.Arte) para manter os dados das obras sempre atualizados.
 
-5. No backend (server.js, rota POST /movimentacoes):
-- Lê obra_id = 123 e local_id = 999.
-- Roda a query:
-```sql
-INSERT INTO movimentacoes (obra_id, local_id, obra_nome, local_nome)
-VALUES (
-  123,
-  999,
-  (SELECT titulo FROM obras WHERE id = 123),
-  (SELECT nome   FROM locais WHERE id = 999)
-)
-RETURNING *;
+---
+
+## Tecnologias Utilizadas
+
+* React.js (Frontend)
+* Node.js + Express.js (Backend)
+* PostgreSQL (Banco de Dados)
+* Axios (requisições HTTP)
+* Bcrypt (hash de senhas)
+* JWT (autenticação)
+* html5-qrcode (leitura de QR Codes via câmera)
+* QRCode + JSZip + FileSaver (geração e download de QR Codes)
+* Luxon (manipulação de datas com timezone)
+* Render (Hospedagem na nuvem)
+
+---
+
+## Estrutura e Funcionamento do Código
+
+### 1️⃣ Frontend (React)
+
+#### Autenticação:
+
+* Página de Login (`Login.jsx`) faz requisição para `/login` na API.
+* Token JWT recebido é armazenado no `localStorage`.
+* Middleware `RequireAuth` (em `App.jsx`) protege as rotas autenticadas.
+
+#### Telas Principais:
+
+* **Movimentacao.jsx**: Registro das movimentações com leitura de QR Codes (obras e locais).
+* **CriarQRCode.jsx**: Geração de QR Codes de forma manual ou em lote (texto ou CSV).
+* **Consulta.jsx**: Consulta avançada com múltiplos filtros e exportação CSV das movimentações.
+* **NavBar.jsx**: Navegação pelo sistema.
+* **LerQR.jsx**: Componente de leitura de QR Code via câmera.
+
+#### API Client:
+
+* Arquivo `api.js` centraliza as chamadas ao backend e já injeta o token JWT no header.
+
+### 2️⃣ Backend (Node.js + Express)
+
+#### Principais Endpoints:
+
+* `POST /login`: Autenticação com bcrypt e JWT.
+* `GET /obras`: Busca de obras via API pública do MASP (In.Arte).
+* `GET /locais`: Consulta dos locais armazenados no banco local.
+* `GET /movimentacoes`: Consulta com filtros dinâmicos.
+* `POST /movimentacoes`: Registra movimentação de obra, buscando dados em tempo real na API do MASP.
+* `GET /usuarios`: Listagem de usuários cadastrados.
+
+#### Integração com API MASP (In.Arte)
+
+* Busca de obras é feita via requisições HTTP usando `axios`.
+* Sempre que uma obra é lida ou consultada, o sistema consulta a base oficial garantindo dados atualizados.
+
+#### Segurança:
+
+* As senhas são armazenadas de forma criptografada (bcrypt).
+* Todas rotas de movimentação exigem token JWT válido.
+
+### 3️⃣ Banco de Dados (PostgreSQL)
+
+#### Tabelas:
+
+* `usuarios`: dados de autenticação.
+* `locais`: locais de armazenamento das obras.
+* `movimentacoes`: registros detalhados de cada movimentação.
+
+#### Exemplo de registro de movimentação:
+
+* obra\_tombo
+* obra\_nome
+* local\_id
+* local\_nome
+* usuario\_id
+* usuario\_nome
+* tipo\_movimentacao (Entrada ou Saída)
+* data\_movimentacao (timestamp)
+* notas\_adicionais
+
+---
+
+## Fluxo Completo de Funcionamento
+
+1. Funcionário acessa o sistema e realiza login.
+2. Escaneia QR Codes das obras e do local de origem/destino.
+3. Seleciona tipo de movimentação (Entrada ou Saída).
+4. (Opcional) Insere notas adicionais.
+5. Registra a movimentação, que fica gravada no banco.
+6. Pode consultar movimentações passadas com múltiplos filtros.
+7. Pode exportar consultas em CSV.
+8. Pode gerar QR Codes individualmente ou em lote.
+
+---
+
+## Como Executar Localmente
+
+### Pré-requisitos:
+
+* Node.js >= 18.x
+* PostgreSQL >= 15.x
+
+### 1️⃣ Configurar o Backend
+
+```bash
+cd backend-masp
+npm install
 ```
-- Digamos que SELECT titulo FROM obras WHERE id=123 retorne “Obra X”, e SELECT nome FROM locais WHERE id=999 retorne “Local Y”.
-- O banco então insere uma nova linha em movimentacoes com:
-    - obra_id = 123
-    - obra_nome = "Obra X"
-    - local_id = 999
-    - local_nome = "Local Y"
-    - data_movimentacao = (NOW())
-- O backend retorna essa linha (JSON) ao Axios.
 
-6. Frontend recebe a resposta de sucesso:
-- handleRegistrar escreve “Movimentação registrada com sucesso!” em mensagem.
-- Limpa o estado dos inputs e IDs, para o usuário poder registrar outra movimentação.
+* Criar arquivo `.env` com as seguintes variáveis:
 
-### 1. server.js (Backend em Node/Express)
-- O que faz?
-    - É o servidor do lado do Node.js que expõe as rotas da sua API para o frontend.
-    - Conecta-se ao banco de dados PostgreSQL usando pg (Pool) (estamos usando pgAdmin 4).
-    - Define rotas como /obras, /locais e /movimentacoes.
-    - Cada rota faz consultas ou inserções no banco de dados e retorna JSON.
+```
+DB_USER=...
+DB_PASSWORD=...
+DB_HOST=...
+DB_NAME=...
+DB_PORT=...
+JWT_SECRET=...
+MASP_API_BASE_URL=https://inarte.masp.org.br/api/api
+MASP_API_LANG=BR
+MASP_API_PAGE_SIZE=50
+```
 
-- Como trabalhamos nele?
-    - Configuramos o Pool para acessar o PostgreSQL (usando variáveis de ambiente .env).
-    - Escrevemos rotas GET para listar dados (obras, locais, movimentações) e um POST para adicionar uma nova movimentação.
-    - Sempre que o React chama api.post("/movimentacoes") ou api.get("/obras"), quem recebe essa requisição é o server.js.
-    - A lógica de subconsulta no INSERT (para gravar obra_nome e local_nome) também está aqui.
+### 2️⃣ Executar o Backend
 
-- Em resumo: Se alguém quiser criar novas rotas, novas formas de inserir dados ou buscar dados, vai alterar o server.js.
+```bash
+node server.js
+```
 
-### 2. Movimentacao.jsx (Página React que registra movimentações)
-- O que faz?
-    - É um componente React que exibe o formulário de movimentações.
-    - Mostra dois campos de autocomplete: um para “Obra” e outro para “Local”.
-    - Quando o usuário clica em “Registrar”, chama a função registrarMovimentacao(obraId, localId).
+### 3️⃣ Configurar o Frontend
 
-- Como trabalhamos nele?
+```bash
+cd frontend-masp
+npm install
+```
 
-1. Estados e Efeitos (useState, useEffect):
-    - obras, locais: para guardar a lista de obras e locais trazidas do servidor (GET /obras e GET /locais).
-    - obraSelecionada, localSelecionado: o texto que o usuário digita no input.
-    - obraId, localId: para guardar o id da obra/local selecionada.
-    - filtrandoObras, filtrandoLocais: guardam as opções filtradas para o autocomplete.
-    - mensagem: exibe feedback de sucesso ou erro na tela.
+* Criar arquivo `.env` com:
 
-2. Funções de filtragem: handleFiltrarObras e handleFiltrarLocais
-    - Filtram a lista local de obras/locais conforme o usuário digita. Mostram uma lista de sugestões.
+```
+VITE_API_URL=http://localhost:5000
+```
 
-3. Funções de seleção: handleSelecionarObra e handleSelecionarLocal
-    - Quando o usuário clica numa sugestão, definem o nome no input e guardam o ID para a futura requisição de registro.
+### 4️⃣ Executar o Frontend
 
-4. Função de registrar movimentação: handleRegistrar
-    - Verifica se os IDs estão definidos.
-    - Chama registrarMovimentacao(obraId, localId) (importado de api.js).
-    - Se der tudo certo, limpa os campos e mostra “Movimentação registrada com sucesso!”.
+```bash
+npm run dev
+```
 
-- Em resumo: É a interface de usuário para cadastro de movimentações. Usa autocomplete, filtra dados em tempo real e manda pro servidor quando confirmamos.
+Sistema rodará localmente em `http://localhost:5173`
 
-### 3. api.js (Configuração do Axios e funções de chamada à API)
-- O que faz?
-    - Centraliza a configuração do Axios, definindo a baseURL (http://localhost:5000).
-    - Exporta funções específicas para cada operação do servidor. Exemplo: registrarMovimentacao(obra_id, local_id).
+---
 
-- Como trabalhamos nele?
-    - Criamos uma instância do axios.create({...}).
-    - Definimos uma função registrarMovimentacao que faz POST /movimentacoes.
-    - Quando o React chama registrarMovimentacao(obraId, localId), esse arquivo cuida de montar a requisição HTTP e enviar ao server.js.
+## Possíveis Evoluções Futuras
 
-- Em resumo: É a ponte entre o React e o servidor Node. Se precisarmos de outras rotas (por exemplo, deletar movimentação), provavelmente criaremos outra função aqui, tipo deletarMovimentacao(id) que faria api.delete("/movimentacoes/" + id).
+* Integração direta via POST com o banco oficial do MASP (In.Arte).
+* Migração para infraestrutura interna do MASP (servidor dedicado).
+* Integração de tecnologia RFID para segurança adicional.
+* Melhorias na performance com novos servidores de cloud.
 
-### 4. App.jsx (Gerencia as rotas do frontend com React Router)
-- O que faz?
-    - É o arquivo principal de rotas do React Router.
-    - Diz: “Se o usuário acessar /, mostre o componente <Movimentacao />”, “Se acessar /search, mostre <Search />”, etc.
+---
 
-- Como trabalhamos nele?
-    - Importamos BrowserRouter, Routes, Route do react-router-dom.
-    - Criaramos <Navbar /> para estar presente em todas as páginas.
-    - Fizemos <Route path="/" element={<Movimentacao />} /> para exibir a tela de movimentações como a rota principal.
+## Créditos
 
-- Em resumo: É o organizador de páginas no frontend. Quem quiser criar uma nova página, por exemplo, /relatorios, provavelmente adicionaria <Route path="/relatorios" element={<Relatorios />} /> aqui.
+* Alexandre Rodrigues Santarossa
+* Natan Kron Goldenberg Lewi
+* Pedro Gomes de Sá Drumond
+* Orientador: Prof. Dr. Luiz Fernando Cardoso dos Santos Durão
+* Coorientador: Prof. Maurício Bouskela
+* Capstone Insper 2025
 
-### 5. main.jsx (Ponto de entrada do React)
-- O que faz?
+---
 
-    - É o primeiro arquivo que o Vite (ou o bundler) executa ao iniciar a aplicação React.
-    - Renderiza o <App /> dentro do <div id="root"></div> no HTML.
-    - Geralmente, é onde se configura se a aplicação roda em <React.StrictMode> ou não.
-
-- Como trabalhamos nele?
-
-    - Importamos o <App /> e chamamos ReactDOM.createRoot(document.getElementById("root")).render(<App />).
-    - Assim, tudo que está no <App /> (todas as rotas, componentes etc.) vai ser exibido no browser.
-    - É muito provável que não vamos alterar esse arquivo com muita frequência; ele é o ponto inicial padrão.
-
-- Em resumo: É o início da aplicação React, quem monta todo o resto na tela.
+Este projeto foi desenvolvido em parceria direta com a equipe técnica do MASP.
