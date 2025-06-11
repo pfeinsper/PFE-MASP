@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/NavBar";
 import Login from "./pages/Login";
-// import Search from "./pages/Search";
 import Movimentacao from "./pages/Movimentacao";
 import CriarQRCodeManual from "./pages/CriarQRCode";
 import Consulta from "./pages/Consulta";
@@ -31,7 +30,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/movimentacao" element={<RequireAuth><Movimentacao /></RequireAuth>} />
-        {/* <Route path="/buscar" element={<RequireAuth><Search /></RequireAuth>} /> */}
         <Route path="/gerar-qr" element={<RequireAuth><CriarQRCodeManual /></RequireAuth>} />
         <Route path="/consulta" element={<RequireAuth><Consulta /></RequireAuth>} />      
       </Routes>

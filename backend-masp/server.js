@@ -67,9 +67,9 @@ app.get("/", (req, res) => {
   res.send("API do MASP está rodando!");
 });
 
-//
+
 // ======== Endpoints de Obras usando API do MASP ========
-//
+
 
 // Listar obras (com filtro por número de tombo via filtro5)
 app.get("/obras", async (req, res) => {
@@ -133,9 +133,8 @@ app.get("/obras/codigo/:codigo", async (req, res) => {
   }
 });
 
-//
+
 // ======== Fim dos Endpoints de Obras ========
-//
 
 
 // Listar locais
@@ -188,7 +187,7 @@ app.get("/movimentacoes", async (req, res) => {
     const {
       data_inicio, data_fim,
       usuario_nome, local_nome,
-      obra_id: obra_tombo,  // recebemos o tombo aqui
+      obra_id: obra_tombo,  
       local_id,
       tipo_movimentacao, search
     } = req.query;
@@ -291,8 +290,6 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
     const obra_tombo = obraItem.inventory_number;  // é este valor que vai para a coluna obra_tombo
     const obra_nome  = obraItem.title;
 
-    // console.log("QUERY:", insertQuery);
-    // console.log("VALORES:", insertValues);
     // 2) busca nome do local como antes
     const locRes = await pool.query(
       "SELECT nome FROM locais WHERE id = $1",
