@@ -3,6 +3,9 @@ process.env.TZ = "America/Sao_Paulo";
 
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
+const https = require("https");
+const http = require("http");
 const axios = require("axios");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
@@ -10,12 +13,11 @@ const jwt = require("jsonwebtoken");
 const { DateTime } = require("luxon");
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5002; // porta do backend HTTPS
 
-// Detecta se ambiente é produção
 const isProduction = process.env.NODE_ENV === "production";
 
-// Conexão com o PostgreSQL
+// PostgreSQL
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -25,7 +27,7 @@ const pool = new Pool({
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
-// Garante timezone para cada nova conexão do pool
+// Timezone para o pool
 pool.on("connect", async (client) => {
   try {
     await client.query("SET TIME ZONE 'America/Sao_Paulo'");
@@ -35,18 +37,15 @@ pool.on("connect", async (client) => {
   }
 });
 
-// Middlewares
+// CORS
 const corsOptions = {
   origin: [
-    // "https://pfe-masp.onrender.com",
-    // "http://localhost:5173",
-    "http://192.168.0.13:5001"
+    "https://192.168.0.13:5001", // frontend em HTTPS
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 };
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
 // Middleware de autenticação
@@ -58,7 +57,6 @@ function autenticarToken(req, res, next) {
   jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
     if (err) return res.sendStatus(403);
     req.usuario = usuario;
-    console.log("Usuário autenticado:", usuario.nome);
     next();
   });
 }
@@ -411,7 +409,13 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Inicia o servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+// Middleware para redirecionar HTTP para HTTPS
+const httpsOptions = {
+  key: fs.readFileSync("/etc/nginx/ssl/masp.key"),
+  cert: fs.readFileSync("/etc/nginx/ssl/masp.crt"),
+};
+
+https.createServer(httpsOptions, app).listen(port, () => {
+  console.log(`✅ Servidor HTTPS rodando em https://localhost:${port}`);
 });
+
