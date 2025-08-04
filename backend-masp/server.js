@@ -38,8 +38,9 @@ pool.on("connect", async (client) => {
 // Middlewares
 const corsOptions = {
   origin: [
-    "https://pfe-masp.onrender.com",
-    "http://localhost:5173"
+    // "https://pfe-masp.onrender.com",
+    // "http://localhost:5173",
+    "http://192.168.0.13:5001"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
