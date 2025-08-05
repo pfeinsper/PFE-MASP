@@ -3,9 +3,6 @@ process.env.TZ = "America/Sao_Paulo";
 
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const https = require("https");
-const http = require("http");
 const axios = require("axios");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
@@ -13,12 +10,10 @@ const jwt = require("jsonwebtoken");
 const { DateTime } = require("luxon");
 
 const app = express();
-// TALVES AJUSTAR
-const port = process.env.PORT || 5002; // porta do backend HTTPS
-
+const port = process.env.PORT || 5000; // NGINX faz proxy para essa porta
 const isProduction = process.env.NODE_ENV === "production";
 
-// PostgreSQL
+// Banco de dados
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -28,7 +23,6 @@ const pool = new Pool({
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
-// Timezone para o pool
 pool.on("connect", async (client) => {
   try {
     await client.query("SET TIME ZONE 'America/Sao_Paulo'");
@@ -39,22 +33,17 @@ pool.on("connect", async (client) => {
 });
 
 // CORS
-const corsOptions = {
-  origin: [
-    "https://192.168.0.13", // frontend em HTTPS
-  ],
+app.use(cors({
+  origin: ["https://192.168.0.13"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-};
-app.use(cors(corsOptions));
+  credentials: true
+}));
 app.use(express.json());
 
-// Middleware de autenticação
+// 🔐 Middleware de autenticação
 function autenticarToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.sendStatus(401);
-
   jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
     if (err) return res.sendStatus(403);
     req.usuario = usuario;
@@ -62,8 +51,11 @@ function autenticarToken(req, res, next) {
   });
 }
 
+// ✅ ROTAS COM PREFIXO /api
+const router = express.Router();
+
 // Rota de teste
-app.get("/", (req, res) => {
+router.get("/", (req, res) => {
   res.send("API do MASP está rodando!");
 });
 
@@ -72,7 +64,7 @@ app.get("/", (req, res) => {
 
 
 // Listar obras (com filtro por número de tombo via filtro5)
-app.get("/obras", async (req, res) => {
+router.get("/obras", async (req, res) => {
   try {
     const { search } = req.query;
     const params = new URLSearchParams({
@@ -102,7 +94,7 @@ app.get("/obras", async (req, res) => {
 });
 
 // Buscar obra por código ou tombo (usando filtro5 e retornando o primeiro resultado)
-app.get("/obras/codigo/:codigo", async (req, res) => {
+router.get("/obras/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
     const params = new URLSearchParams({
@@ -138,7 +130,7 @@ app.get("/obras/codigo/:codigo", async (req, res) => {
 
 
 // Listar locais
-app.get("/locais", async (req, res) => {
+router.get("/locais", async (req, res) => {
   try {
     const { search } = req.query;
     let query = "SELECT * FROM locais";
@@ -164,7 +156,7 @@ app.get("/locais", async (req, res) => {
 });
 
 // Buscar local por código
-app.get("/locais/codigo/:codigo", async (req, res) => {
+router.get("/locais/codigo/:codigo", async (req, res) => {
   try {
     const { codigo } = req.params;
     const result = await pool.query(
@@ -182,7 +174,7 @@ app.get("/locais/codigo/:codigo", async (req, res) => {
 });
 
 // Listar movimentações
-app.get("/movimentacoes", async (req, res) => {
+router.get("/movimentacoes", async (req, res) => {
   try {
     const {
       data_inicio, data_fim,
@@ -339,7 +331,7 @@ app.post("/movimentacoes", autenticarToken, async (req, res) => {
 
 
 // Listar usuários
-app.get("/usuarios", async (req, res) => {
+router.get("/usuarios", async (req, res) => {
   try {
     const { search } = req.query;
     let query = "SELECT * FROM usuarios";
@@ -360,7 +352,7 @@ app.get("/usuarios", async (req, res) => {
 });
 
 // Histórico de movimentações de uma obra
-app.get("/movimentacoes/obra/:obra_id", async (req, res) => {
+router.get("/movimentacoes/obra/:obra_id", async (req, res) => {
   try {
     const { obra_id } = req.params;
     const result = await pool.query(`
