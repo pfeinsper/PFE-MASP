@@ -39,7 +39,7 @@ pool.on("connect", async (client) => {
 // CORS
 const corsOptions = {
   origin: [
-    "https://192.168.0.13", // frontend em HTTPS
+    "https://192.168.0.13:9015", // frontend em HTTPS
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
